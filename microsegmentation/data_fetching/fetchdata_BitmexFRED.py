@@ -8,9 +8,9 @@ from fredapi import Fred
 import yfinance as yf
 
 # Replace with your actual BitMEX API key
-bitmex_api_key = 'TlKnPffHH1bIjX7Ea_A1xKLW'
+bitmex_api_key = 'BitMEX API key'
 # Replace with your actual FRED API key
-fred_api_key = 'babcf0538b741e4c985fde31a43ed37c'
+fred_api_key = 'FRED API key'
 
 # Initialize FRED API
 fred = Fred(api_key=fred_api_key)
