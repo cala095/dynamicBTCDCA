@@ -10,12 +10,12 @@ from newsapi import NewsApiClient
 print("Starting fetchingTwitterRedditNews.py")
 
 # Reddit API credentials
-reddit_client_id = 'fImp2bIF-caJyYO9xDAhsQ'
-reddit_client_secret = 'fo_IqKNV-rhS90XgIFa8B4xwwV-tcA'
+reddit_client_id = 'api-id'
+reddit_client_secret = 'clientsecret'
 user_agent = 'MyRedditScrpt/1.0 by Lorenzo Calarota (cala95@gmail.com)'
 
 # News API key
-news_api_key = 'f523589a4c564228bd14cdade0bafac2'
+news_api_key = 'news-apikey'
 
 # Set up the snscrape Twitter scraper
 def fetch_tweets(query, count):
