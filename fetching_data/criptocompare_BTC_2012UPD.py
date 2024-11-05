@@ -27,23 +27,21 @@ def download_missing_data(api_key, last_timestamp):
     base_url = 'https://min-api.cryptocompare.com/data/v2/histominute'
 
     # Subtract 2 minutes from current time to ensure data is available
-    end_timestamp = int((datetime.now() - timedelta(minutes=2)).timestamp())
+    end_timestamp = int((datetime.now() - timedelta(minutes=1)).timestamp())
 
     all_data = []
 
     toTs = end_timestamp
-    last_timestamp += 60  # Start from the next minute after last_timestamp
+    fromTs = last_timestamp + 60  # Start from the next minute after last_timestamp
 
-    while toTs >= last_timestamp:
+    while toTs >= fromTs:
         # Calculate the number of data points to fetch
-        minutes_to_fetch = int((toTs - last_timestamp) / 60) + 1
+        minutes_to_fetch = int((toTs - fromTs) / 60) + 1  # +1 to include both endpoints
         if minutes_to_fetch <= 0:
             break
 
-        # Since limit = number of data points - 1, we need to set limit accordingly
-        limit = min(2000, minutes_to_fetch) - 1
-        if limit < 1:
-            limit = 1
+        # Since limit = number of data points - 1
+        limit = min(2000, minutes_to_fetch) - 1  # Fetch up to 2000 data points per request
 
         params = {
             'api_key': api_key,
@@ -84,8 +82,8 @@ def download_missing_data(api_key, last_timestamp):
         combined_df = pd.concat(all_data, ignore_index=True)
         # Remove duplicate timestamps
         combined_df.drop_duplicates(subset=['time'], inplace=True)
-        # Filter out any data with time less than or equal to last_timestamp - 60
-        combined_df = combined_df[combined_df['time'] >= last_timestamp]
+        # Exclude any data with time less than or equal to last_timestamp
+        combined_df = combined_df[combined_df['time'] > last_timestamp]
         # Sort by time ascending
         combined_df.sort_values('time', inplace=True)
         return combined_df
@@ -97,22 +95,27 @@ def fetch_latest_data(api_key):
     Fetches the latest 1-minute BTC data point.
     """
     base_url = 'https://min-api.cryptocompare.com/data/v2/histominute'
+    toTs = int((datetime.now() - timedelta(minutes=1)).timestamp())
     params = {
         'api_key': api_key,
         'fsym': 'BTC',
         'tsym': 'USD',
-        'limit': 1,
-        'aggregate': 1
+        'limit': 1,  # Fetch the latest data point
+        'aggregate': 1,
+        'toTs': toTs
     }
     try:
         response = requests.get(base_url, params=params)
+        print(f"Request URL: {response.url}")
         if response.status_code == 200:
             data = response.json()
-            if 'Data' in data and 'Data' in data['Data']:
+            if data.get('Response') == 'Success' and 'Data' in data and 'Data' in data['Data']:
                 df = pd.DataFrame(data['Data']['Data'])
                 return df
             else:
                 print("No data found in response.")
+                print(f"Response data: {data}")
+                print(f"Message: {data.get('Message')}")
                 return None
         else:
             print(f"Error: Status code {response.status_code}")
@@ -136,36 +139,43 @@ def main(csv_file, api_key):
 
         print(f"Starting from last timestamp: {datetime.fromtimestamp(last_timestamp)}")
 
-        # Check if there is missing data between last_timestamp and now
-        current_timestamp = int((datetime.now() - timedelta(minutes=2)).timestamp())
-        if current_timestamp > last_timestamp + 60:
-            print("Downloading missing data...")
-            new_data = download_missing_data(api_key, last_timestamp)
-            if new_data is not None and not new_data.empty:
-                # Process new data
-                new_data['Timestamp'] = new_data['time']
-                new_data.rename(columns={
-                    'open': 'Open',
-                    'high': 'High',
-                    'low': 'Low',
-                    'close': 'Close',
-                    'volumefrom': 'Volume'
-                }, inplace=True)
-                new_data = new_data[['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume']]
+        # Download missing data and clean it
+        new_data = download_missing_data(api_key, last_timestamp)
+        if new_data is not None and not new_data.empty:
+            # Process new data
+            new_data['Timestamp'] = new_data['time']
+            new_data.rename(columns={
+                'open': 'Open',
+                'high': 'High',
+                'low': 'Low',
+                'close': 'Close',
+                'volumefrom': 'Volume'
+            }, inplace=True)
+            new_data = new_data[['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume']]
 
-                # Append new data to CSV file
-                new_data.to_csv(csv_file, mode='a', header=False, index=False)
+            # Read existing CSV
+            existing_df = pd.read_csv(csv_file)
 
-                # Update last_timestamp
-                last_timestamp = new_data['Timestamp'].max()
-                print(f"Appended {len(new_data)} new records to {csv_file}")
+            # Append new data
+            combined_df = pd.concat([existing_df, new_data], ignore_index=True)
 
-            else:
-                print("No new data downloaded.")
+            # Drop duplicates
+            combined_df.drop_duplicates(subset=['Timestamp'], inplace=True)
+
+            # Sort by Timestamp
+            combined_df.sort_values('Timestamp', inplace=True)
+
+            # Save back to CSV
+            combined_df.to_csv(csv_file, index=False)
+
+            # Update last_timestamp
+            last_timestamp = combined_df['Timestamp'].max()
+            print(f"Appended {len(new_data)} new records to {csv_file}")
 
         else:
-            print("No missing data between last timestamp and now.")
+            print("No new data downloaded.")
 
+        # After initial run, only fetch and append the latest minute data
         while True:
             try:
                 new_data = fetch_latest_data(api_key)
@@ -213,7 +223,7 @@ def main(csv_file, api_key):
         print(f"An error occurred: {e}")
 
 if __name__ == "__main__":
-    api_key = "freezalando2 key"  # Replace with your actual API key
-    csv_file = "F:\\backup\\BTCDCA_DATA\\bitcoin 1 minute 2012 raw\\btcusd_1-min_data.csv"  # Path to your CSV file
+    api_key = "freezaland2"  # Replace with your actual API key
+    csv_file = "PriceData\\btcusd_1-min_data.csv"  # Path to your CSV file
     print("Starting BTC data update script...")
     main(csv_file, api_key)
