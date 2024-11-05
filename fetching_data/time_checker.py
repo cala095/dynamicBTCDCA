@@ -2,7 +2,7 @@ import pandas as pd
 from datetime import datetime
 
 # Read the CSV file with headers
-df = pd.read_csv('D:\\BTCDCA\\dynamicBTCDCA\\fetching_data\\PriceData\\btcusd_1-min_data.csv')
+df = pd.read_csv('PriceData\\btcusd_1-min_data.csv')
 
 # Convert Unix time to formatted datetime
 df['Formatted_Time'] = df['Timestamp'].apply(lambda x: datetime.fromtimestamp(x).strftime('%d-%m-%y_%H-%M-%S'))

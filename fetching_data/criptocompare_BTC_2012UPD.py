@@ -106,7 +106,7 @@ def fetch_latest_data(api_key):
     }
     try:
         response = requests.get(base_url, params=params)
-        print(f"Request URL: {response.url}")
+        # print(f"Request URL: {response.url}")
         if response.status_code == 200:
             data = response.json()
             if data.get('Response') == 'Success' and 'Data' in data and 'Data' in data['Data']:
