@@ -2,3 +2,6 @@ ideas.txt
 fetching_data/transformed_data.csv
 fetching_data/PriceData/btcusd_1-min_data.csv
 fetching_data/Yahoo Finance+FRED.py
+fetching_data/live/gmail_credential.json
+fetching_data/live/token.json
+fetching_data/live/PriceData/btcusd_1-min_data.csv
