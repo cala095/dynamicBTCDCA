@@ -12,8 +12,8 @@ from googleapiclient.discovery import build
 from bs4 import BeautifulSoup
 
 # Define Gmail API scopes
-SCOPES = ['https://mail.google.com/'] 
-#global
+SCOPES = ['https://mail.google.com/']
+# Global variable to store last ticker states
 last_ticker_states = {}
 
 # Authenticate and create a service object
@@ -59,7 +59,7 @@ def fetch_and_process_emails(service):
     # Process each email
     for email in emails:
         process_email(email['message'])
-        # Delete the email after processing
+        # Delete the email after processing (uncomment if desired)
         # service.users().messages().delete(userId='me', id=email['id']).execute()
 
 def process_email(message):
@@ -82,9 +82,6 @@ def process_email(message):
     if email_data:
         decoded_data = base64.urlsafe_b64decode(email_data).decode('utf-8')
         email_content = decoded_data.strip()
-
-        # Debug: Print the raw email content
-        # print("DEBUG Email Content:", email_content)
 
         # If content is HTML, parse it to extract JSON
         if '<html' in email_content.lower():
@@ -127,16 +124,17 @@ def process_email(message):
 def parse_time(data_time):
     if isinstance(data_time, (int, float)):
         # Assume it's a UNIX timestamp in seconds
-        return datetime.datetime.utcfromtimestamp(data_time)
+        return datetime.datetime.utcfromtimestamp(data_time).replace(tzinfo=datetime.timezone.utc)
     elif isinstance(data_time, str):
         try:
             # Try to parse as ISO format
-            return datetime.datetime.fromisoformat(data_time.replace('Z', '+00:00'))
+            dt = datetime.datetime.fromisoformat(data_time.replace('Z', '+00:00'))
+            return dt
         except ValueError:
             pass
         try:
             # Try to parse as UNIX timestamp in string
-            return datetime.datetime.utcfromtimestamp(float(data_time))
+            return datetime.datetime.utcfromtimestamp(float(data_time)).replace(tzinfo=datetime.timezone.utc)
         except ValueError:
             pass
     # If none of the above, raise an error
@@ -162,6 +160,26 @@ def save_last_ticker_state(ticker, last_timestamp, last_price):
     with open(state_file, 'w') as f:
         json.dump(state, f)
 
+def get_last_timestamp_from_file(ticker):
+    data_file = f"{ticker}_data.txt"
+    if not os.path.exists(data_file):
+        return None
+    with open(data_file, 'r') as f:
+        lines = f.readlines()
+        if not lines:
+            return None
+        last_line = lines[-1].strip()
+        if not last_line:
+            return None
+        try:
+            timestamp_str, _ = last_line.split(', ')
+            last_timestamp_naive = datetime.datetime.strptime(timestamp_str, '%d-%m-%y_%H-%M-%S')
+            # Make last_timestamp timezone-aware, assuming UTC
+            last_timestamp = last_timestamp_naive.replace(tzinfo=datetime.timezone.utc)
+            return last_timestamp
+        except ValueError:
+            return None
+
 def append_to_ticker_file(ticker, line):
     data_file = f"{ticker}_data.txt"
     with open(data_file, 'a') as f:
@@ -184,19 +202,35 @@ def process_ticker_data(ticker, data):
     # Now, check for time gaps
     time_difference = current_timestamp - last_timestamp
     total_minutes = int(time_difference.total_seconds() / 60)
+
+    # Get the last timestamp from the data file to check for overlaps
+    last_file_timestamp = get_last_timestamp_from_file(ticker)
+
+    # If the current timestamp is the same as the last timestamp in the file, skip appending
+    if last_file_timestamp and current_timestamp <= last_file_timestamp:
+        print(f"Data for timestamp {current_timestamp} already exists in the file for {ticker}. Skipping append.")
+        # Update last_timestamp and last_price in the state
+        last_timestamp = current_timestamp
+        last_price = current_price
+        save_last_ticker_state(ticker, last_timestamp, last_price)
+        return
+
     if total_minutes > 1:
         # Fill in missing intervals
         for i in range(1, total_minutes):
             timestamp_to_add = last_timestamp + datetime.timedelta(minutes=i)
+            if last_file_timestamp and timestamp_to_add <= last_file_timestamp:
+                continue  # Skip timestamps that already exist
             timestamp_str = timestamp_to_add.strftime('%d-%m-%y_%H-%M-%S')
             line = f"{timestamp_str}, {last_price}\n"
             append_to_ticker_file(ticker, line)
 
-    # Now, append the current data
-    timestamp_str = current_timestamp.strftime('%d-%m-%y_%H-%M-%S')
-    line = f"{timestamp_str}, {current_price}\n"
-    append_to_ticker_file(ticker, line)
-    
+    # Append the current data if it's newer than the last file timestamp
+    if not last_file_timestamp or current_timestamp > last_file_timestamp:
+        timestamp_str = current_timestamp.strftime('%d-%m-%y_%H-%M-%S')
+        line = f"{timestamp_str}, {current_price}\n"
+        append_to_ticker_file(ticker, line)
+
     # Update last_timestamp and last_price
     last_timestamp = current_timestamp
     last_price = current_price
@@ -221,7 +255,9 @@ def clean_ticker_data(ticker):
             try:
                 timestamp_str, price_str = line.split(', ')
                 # Parse timestamp
-                timestamp = datetime.datetime.strptime(timestamp_str, '%d-%m-%y_%H-%M-%S')
+                timestamp_naive = datetime.datetime.strptime(timestamp_str, '%d-%m-%y_%H-%M-%S')
+                # Make timestamp timezone-aware in UTC
+                timestamp = timestamp_naive.replace(tzinfo=datetime.timezone.utc)
                 # Parse price
                 price = float(price_str)
                 # Use timestamp as the key to ensure uniqueness
@@ -236,18 +272,13 @@ def clean_ticker_data(ticker):
     # Write the cleaned data back to the file
     with open(data_file, 'w') as f:
         for timestamp, price in sorted_data:
-            timestamp_str = timestamp.strftime('%d-%m-%y_%H-%M-%S')
+            # Convert timezone-aware datetime to naive datetime before formatting
+            timestamp_naive = timestamp.replace(tzinfo=None)
+            timestamp_str = timestamp_naive.strftime('%d-%m-%y_%H-%M-%S')
             line = f"{timestamp_str}, {price}\n"
             f.write(line)
 
     print(f"Data file for ticker {ticker} cleaned.")
-
-def schedule_data_cleaning():
-    tickers = ['US10Y', 'US02Y']
-    for ticker in tickers:
-        clean_ticker_data(ticker)
-    # Schedule the function to run again after a certain interval
-    threading.Timer(3600, schedule_data_cleaning).start()  # Runs every hour
 
 # Main loop to poll for new emails
 def main():
@@ -261,14 +292,11 @@ def main():
 
     for ticker in tickers:
         clean_ticker_data(ticker)
-    # Start the data cleaning scheduler
-    # schedule_data_cleaning()
 
     while True:
         fetch_and_process_emails(service)
         print("sleep 60 sec")
         time.sleep(60)  # Wait before checking again
-        
 
 if __name__ == '__main__':
     main()
