@@ -4,6 +4,7 @@ import json
 import time
 import datetime
 import html
+import threading
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -195,7 +196,7 @@ def process_ticker_data(ticker, data):
     timestamp_str = current_timestamp.strftime('%d-%m-%y_%H-%M-%S')
     line = f"{timestamp_str}, {current_price}\n"
     append_to_ticker_file(ticker, line)
-
+    
     # Update last_timestamp and last_price
     last_timestamp = current_timestamp
     last_price = current_price
@@ -203,16 +204,65 @@ def process_ticker_data(ticker, data):
     # Save the last state
     save_last_ticker_state(ticker, last_timestamp, last_price)
 
+def clean_ticker_data(ticker):
+    data_file = f"{ticker}_data.txt"
+    if not os.path.exists(data_file):
+        print(f"No data file found for ticker {ticker}.")
+        return
+
+    print(f"Cleaning data file for ticker {ticker}...")
+
+    cleaned_data = {}
+    with open(data_file, 'r') as f:
+        for line_number, line in enumerate(f, start=1):
+            line = line.strip()
+            if not line:
+                continue  # Skip empty lines
+            try:
+                timestamp_str, price_str = line.split(', ')
+                # Parse timestamp
+                timestamp = datetime.datetime.strptime(timestamp_str, '%d-%m-%y_%H-%M-%S')
+                # Parse price
+                price = float(price_str)
+                # Use timestamp as the key to ensure uniqueness
+                cleaned_data[timestamp] = price
+            except ValueError as e:
+                print(f"Error parsing line {line_number} in {data_file}: {e}")
+                continue  # Skip malformed lines
+
+    # Sort the data by timestamp
+    sorted_data = sorted(cleaned_data.items())
+
+    # Write the cleaned data back to the file
+    with open(data_file, 'w') as f:
+        for timestamp, price in sorted_data:
+            timestamp_str = timestamp.strftime('%d-%m-%y_%H-%M-%S')
+            line = f"{timestamp_str}, {price}\n"
+            f.write(line)
+
+    print(f"Data file for ticker {ticker} cleaned.")
+
+def schedule_data_cleaning():
+    tickers = ['US10Y', 'US02Y']
+    for ticker in tickers:
+        clean_ticker_data(ticker)
+    # Schedule the function to run again after a certain interval
+    threading.Timer(3600, schedule_data_cleaning).start()  # Runs every hour
+
 # Main loop to poll for new emails
 def main():
-
     service = authenticate_gmail()
 
     # Initialize last ticker states
-    tickers = ['US10Y', 'US2Y']
+    tickers = ['US10Y', 'US02Y']
     for ticker in tickers:
         last_timestamp, last_price = load_last_ticker_state(ticker)
         last_ticker_states[ticker] = {'timestamp': last_timestamp, 'price': last_price}
+
+    for ticker in tickers:
+        clean_ticker_data(ticker)
+    # Start the data cleaning scheduler
+    # schedule_data_cleaning()
 
     while True:
         fetch_and_process_emails(service)
