@@ -1,16 +1,17 @@
 import os
 import base64
 import json
-import re
 import time
 import datetime
+import html
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+from bs4 import BeautifulSoup
 
 # Define Gmail API scopes
-SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
+SCOPES = ['https://mail.google.com/'] 
 
 # Authenticate and create a service object
 def authenticate_gmail():
@@ -55,47 +56,63 @@ def fetch_and_process_emails(service):
 def process_email(message):
     # Extract email body content
     payload = message['payload']
-    parts = payload.get('parts')
-    if parts:
-        # The message has multiple parts
+    email_data = None
+
+    if 'parts' in payload:
+        parts = payload['parts']
         for part in parts:
             if part['mimeType'] == 'text/plain':
                 email_data = part['body']['data']
                 break
-        else:
-            print("No text/plain part found in email.")
-            return
+            elif part['mimeType'] == 'text/html':
+                email_data = part['body']['data']
+                break
     else:
         email_data = payload['body']['data']
 
-    decoded_data = base64.urlsafe_b64decode(email_data).decode('utf-8')
-    email_content = decoded_data.strip()
+    if email_data:
+        decoded_data = base64.urlsafe_b64decode(email_data).decode('utf-8')
+        email_content = decoded_data.strip()
 
-    # Add this line to DEBUG email content
-    print("DEBUG Email Content:", email_content)
+        # Debug: Print the raw email content
+        # print("DEBUG Email Content:", email_content)
 
-    # Extract JSON string from the email content using regex
-    json_match = re.search(r'\{.*\}', email_content, re.DOTALL)
-    if json_match:
-        json_str = json_match.group(0)
-        try:
-            data = json.loads(json_str)
-                # Parse email content as JSON
-            required_keys = {"ticker", "volume", "price", "time", "exchange"}
-            if all(key in data for key in required_keys):
-                ticker = data['ticker']
-                process_ticker_data(ticker, data)
-                print(f"Processed alert for ticker {ticker}: {data}")
-            else:
-                print("Email content does not match the required format.")
-        except json.JSONDecodeError:
-            print("Email content is not valid JSON.")
-        except json.JSONDecodeError as e:
-            print("Failed to parse JSON:", e)
+        # If content is HTML, parse it to extract JSON
+        if '<html' in email_content.lower():
+            soup = BeautifulSoup(email_content, 'html.parser')
+            # Find all <p> tags
+            p_tags = soup.find_all('p')
+            for p in p_tags:
+                text = p.get_text(strip=True)
+                # Unescape HTML entities
+                text_unescaped = html.unescape(text)
+                # Try to parse JSON
+                try:
+                    data = json.loads(text_unescaped)
+                    required_keys = {"ticker", "volume", "price", "time", "exchange"}
+                    if all(key in data for key in required_keys):
+                        ticker = data['ticker']
+                        process_ticker_data(ticker, data)
+                        print(f"Processed alert for ticker {ticker}: {data}")
+                        return
+                except json.JSONDecodeError:
+                    continue  # Try next <p> tag
+            print("No valid JSON found in the email content.")
+        else:
+            # If not HTML, try to parse as JSON directly
+            try:
+                data = json.loads(email_content)
+                required_keys = {"ticker", "volume", "price", "time", "exchange"}
+                if all(key in data for key in required_keys):
+                    ticker = data['ticker']
+                    process_ticker_data(ticker, data)
+                    print(f"Processed alert for ticker {ticker}: {data}")
+                else:
+                    print("Email content does not match the required format.")
+            except json.JSONDecodeError:
+                print("Email content is not valid JSON.")
     else:
-        print("No JSON found in the email content.")
-
-    
+        print("No email content found.")
 
 def parse_time(data_time):
     if isinstance(data_time, (int, float)):
@@ -104,7 +121,7 @@ def parse_time(data_time):
     elif isinstance(data_time, str):
         try:
             # Try to parse as ISO format
-            return datetime.datetime.fromisoformat(data_time)
+            return datetime.datetime.fromisoformat(data_time.replace('Z', '+00:00'))
         except ValueError:
             pass
         try:
@@ -183,7 +200,9 @@ def main():
 
     while True:
         fetch_and_process_emails(service)
+        print("sleep 60 sec")
         time.sleep(60)  # Wait before checking again
+        
 
 if __name__ == '__main__':
     main()
