@@ -12,6 +12,8 @@ from bs4 import BeautifulSoup
 
 # Define Gmail API scopes
 SCOPES = ['https://mail.google.com/'] 
+#global
+last_ticker_states = {}
 
 # Authenticate and create a service object
 def authenticate_gmail():
@@ -36,12 +38,18 @@ def fetch_and_process_emails(service):
         print("No new TradingView alerts found.")
         return
 
-    # Fetch message details
+    print(f"Fetched {len(messages)} email(s).")
     emails = []
     for msg in messages:
         msg_id = msg['id']
         message = service.users().messages().get(userId='me', id=msg_id).execute()
         internal_date = int(message['internalDate'])  # milliseconds since epoch
+
+        # Get the email subject
+        headers = message['payload'].get('headers', [])
+        subject = next((header['value'] for header in headers if header['name'] == 'Subject'), 'No Subject')
+        print(f"Processing email ID: {msg_id}, Subject: {subject}")
+
         emails.append({'id': msg_id, 'message': message, 'internalDate': internal_date})
 
     # Sort emails by internalDate
@@ -51,7 +59,7 @@ def fetch_and_process_emails(service):
     for email in emails:
         process_email(email['message'])
         # Delete the email after processing
-        service.users().messages().delete(userId='me', id=email['id']).execute()
+        # service.users().messages().delete(userId='me', id=email['id']).execute()
 
 def process_email(message):
     # Extract email body content
@@ -89,7 +97,7 @@ def process_email(message):
                 # Try to parse JSON
                 try:
                     data = json.loads(text_unescaped)
-                    required_keys = {"ticker", "volume", "price", "time", "exchange"}
+                    required_keys = {"ticker", "volume", "price", "time"}
                     if all(key in data for key in required_keys):
                         ticker = data['ticker']
                         process_ticker_data(ticker, data)
@@ -98,11 +106,12 @@ def process_email(message):
                 except json.JSONDecodeError:
                     continue  # Try next <p> tag
             print("No valid JSON found in the email content.")
+            print("DEBUG Email Content:", email_content)
         else:
             # If not HTML, try to parse as JSON directly
             try:
                 data = json.loads(email_content)
-                required_keys = {"ticker", "volume", "price", "time", "exchange"}
+                required_keys = {"ticker", "volume", "price", "time"}
                 if all(key in data for key in required_keys):
                     ticker = data['ticker']
                     process_ticker_data(ticker, data)
@@ -196,7 +205,14 @@ def process_ticker_data(ticker, data):
 
 # Main loop to poll for new emails
 def main():
+
     service = authenticate_gmail()
+
+    # Initialize last ticker states
+    tickers = ['US10Y', 'US2Y']
+    for ticker in tickers:
+        last_timestamp, last_price = load_last_ticker_state(ticker)
+        last_ticker_states[ticker] = {'timestamp': last_timestamp, 'price': last_price}
 
     while True:
         fetch_and_process_emails(service)
