@@ -13,8 +13,11 @@ from bs4 import BeautifulSoup
 
 # Define Gmail API scopes
 SCOPES = ['https://mail.google.com/']
-# Global variable to store last ticker states
+
+# Global variables
 last_ticker_states = {}
+data_added = {}  # Tracks whether data was added for each ticker during the interval
+tickers = ['US10Y', 'US02Y']  # List of tickers to monitor
 
 # Authenticate and create a service object
 def authenticate_gmail():
@@ -186,6 +189,7 @@ def append_to_ticker_file(ticker, line):
         f.write(line)
 
 def process_ticker_data(ticker, data):
+    global data_added
     last_timestamp, last_price = load_last_ticker_state(ticker)
     try:
         current_timestamp = parse_time(data['time'])
@@ -238,6 +242,9 @@ def process_ticker_data(ticker, data):
     # Save the last state
     save_last_ticker_state(ticker, last_timestamp, last_price)
 
+    # Mark that data was added for this ticker
+    data_added[ticker] = True
+
 def clean_ticker_data(ticker):
     data_file = f"{ticker}_data.txt"
     if not os.path.exists(data_file):
@@ -280,21 +287,56 @@ def clean_ticker_data(ticker):
 
     print(f"Data file for ticker {ticker} cleaned.")
 
+def sync_missing_data():
+    current_time = datetime.datetime.utcnow().replace(second=0, microsecond=0, tzinfo=datetime.timezone.utc)
+    for ticker in tickers:
+        if not data_added.get(ticker, False):
+            # No new data was added for this ticker during the interval
+            print(f"No new data for ticker {ticker} during this interval. Syncing data...")
+            last_timestamp, last_price = load_last_ticker_state(ticker)
+            if last_price is not None:
+                last_file_timestamp = get_last_timestamp_from_file(ticker)
+                # If last_file_timestamp is None, initialize it to last_timestamp
+                if not last_file_timestamp:
+                    last_file_timestamp = last_timestamp
+                time_difference = current_time - last_file_timestamp
+                total_minutes = int(time_difference.total_seconds() / 60)
+                if total_minutes >= 1:
+                    for i in range(1, total_minutes + 1):
+                        timestamp_to_add = last_file_timestamp + datetime.timedelta(minutes=i)
+                        if timestamp_to_add > current_time:
+                            break
+                        timestamp_str = timestamp_to_add.strftime('%d-%m-%y_%H-%M-%S')
+                        line = f"{timestamp_str}, {last_price}\n"
+                        append_to_ticker_file(ticker, line)
+                        # Update last_timestamp and last_price
+                        last_timestamp = timestamp_to_add
+                        save_last_ticker_state(ticker, last_timestamp, last_price)
+                        print(f"Appended data for {ticker} at {timestamp_str} with price {last_price}")
+                else:
+                    print(f"Data for {ticker} is already up to date.")
+            else:
+                print(f"No previous data available for ticker {ticker} to sync.")
+        # Reset data_added for the next interval
+        data_added[ticker] = False
+
 # Main loop to poll for new emails
 def main():
+    global data_added
     service = authenticate_gmail()
 
     # Initialize last ticker states
-    tickers = ['US10Y', 'US02Y']
     for ticker in tickers:
         last_timestamp, last_price = load_last_ticker_state(ticker)
         last_ticker_states[ticker] = {'timestamp': last_timestamp, 'price': last_price}
+        data_added[ticker] = False  # Initialize data_added flag
 
     for ticker in tickers:
         clean_ticker_data(ticker)
 
     while True:
         fetch_and_process_emails(service)
+        sync_missing_data()
         print("sleep 60 sec")
         time.sleep(60)  # Wait before checking again
 
