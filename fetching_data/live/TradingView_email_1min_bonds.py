@@ -34,17 +34,49 @@ def authenticate_gmail():
             token_file.write(creds.to_json())
     return build('gmail', 'v1', credentials=creds)
 
+def get_label_id(service, label_name):
+    label_list = service.users().labels().list(userId='me').execute()
+    labels = label_list.get('labels', [])
+    for label in labels:
+        if label['name'] == label_name:
+            return label['id']
+    # If the label doesn't exist, create it
+    label = {'name': label_name}
+    result = service.users().labels().create(userId='me', body=label).execute()
+    return result['id']
+
 def fetch_and_process_emails(service):
-    query = 'subject:"Alert" from:noreply@tradingview.com'
-    results = service.users().messages().list(userId='me', q=query).execute()
-    messages = results.get('messages', [])
-    if not messages:
+    query = 'subject:"Alert" from:noreply@tradingview.com -label:Processed'
+    emails = []
+    page_token = None
+
+    while True:
+        try:
+            if page_token:
+                results = service.users().messages().list(userId='me', q=query, pageToken=page_token).execute()
+            else:
+                results = service.users().messages().list(userId='me', q=query).execute()
+            messages = results.get('messages', [])
+            if messages:
+                emails.extend(messages)
+            page_token = results.get('nextPageToken')
+            if not page_token:
+                break
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            break
+
+    if not emails:
         print("No new TradingView alerts found.")
         return
 
-    print(f"Fetched {len(messages)} email(s).")
-    emails = []
-    for msg in messages:
+    print(f"Fetched {len(emails)} email(s).")
+
+    # Get the label ID for "Processed"
+    processed_label_id = get_label_id(service, 'Processed')
+
+    processed_emails = []
+    for msg in emails:
         msg_id = msg['id']
         message = service.users().messages().get(userId='me', id=msg_id).execute()
         internal_date = int(message['internalDate'])  # milliseconds since epoch
@@ -54,14 +86,23 @@ def fetch_and_process_emails(service):
         subject = next((header['value'] for header in headers if header['name'] == 'Subject'), 'No Subject')
         print(f"Processing email ID: {msg_id}, Subject: {subject}")
 
-        emails.append({'id': msg_id, 'message': message, 'internalDate': internal_date})
+        processed_emails.append({'id': msg_id, 'message': message, 'internalDate': internal_date})
 
     # Sort emails by internalDate
-    emails.sort(key=lambda x: x['internalDate'])
+    processed_emails.sort(key=lambda x: x['internalDate'])
 
     # Process each email
-    for email in emails:
+    for email in processed_emails:
         process_email(email['message'])
+        # Add the "Processed" label and remove from Inbox
+        service.users().messages().modify(
+            userId='me',
+            id=email['id'],
+            body={
+                'addLabelIds': [processed_label_id],
+                'removeLabelIds': ['INBOX']
+            }
+        ).execute()
         # Delete the email after processing (uncomment if desired)
         # service.users().messages().delete(userId='me', id=email['id']).execute()
 
@@ -144,7 +185,7 @@ def parse_time(data_time):
     raise ValueError(f"Unable to parse time: {data_time}")
 
 def load_last_ticker_state(ticker):
-    state_file = f"{ticker}_state.json"
+    state_file = f"PriceData\\{ticker}_state.json"
     if os.path.exists(state_file):
         with open(state_file, 'r') as f:
             state = json.load(f)
@@ -152,10 +193,11 @@ def load_last_ticker_state(ticker):
             last_price = state['last_price']
             return last_timestamp, last_price
     else:
+        print(f"no last state found for {ticker}")
         return None, None
 
 def save_last_ticker_state(ticker, last_timestamp, last_price):
-    state_file = f"{ticker}_state.json"
+    state_file = f"PriceData\\{ticker}_state.json"
     state = {
         'last_timestamp': last_timestamp.isoformat(),
         'last_price': last_price
@@ -184,7 +226,7 @@ def get_last_timestamp_from_file(ticker):
             return None
 
 def append_to_ticker_file(ticker, line):
-    data_file = f"{ticker}_data.txt"
+    data_file = f"PriceData\\{ticker}_data.txt"
     with open(data_file, 'a') as f:
         f.write(line)
 
@@ -246,7 +288,7 @@ def process_ticker_data(ticker, data):
     data_added[ticker] = True
 
 def clean_ticker_data(ticker):
-    data_file = f"{ticker}_data.txt"
+    data_file = f"PriceData\\{ticker}_data.txt"
     if not os.path.exists(data_file):
         print(f"No data file found for ticker {ticker}.")
         return
