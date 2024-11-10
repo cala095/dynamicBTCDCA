@@ -181,7 +181,7 @@ def main(csv_file, api_key):
                 new_data = fetch_latest_data(api_key)
                 if new_data is not None and not new_data.empty:
                     # Check if new_data timestamp is greater than last_timestamp
-                    new_timestamp = new_data['time'].iloc[-1]
+                    new_timestamp = new_data['time'].iloc[0]
                     if new_timestamp > last_timestamp:
                         # Process new data
                         new_data['Timestamp'] = new_data['time']

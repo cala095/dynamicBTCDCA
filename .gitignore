@@ -5,3 +5,7 @@ fetching_data/Yahoo Finance+FRED.py
 fetching_data/live/gmail_credential.json
 fetching_data/live/token.json
 fetching_data/live/PriceData/btcusd_1-min_data.csv
+fetching_data/live/PriceData/US02Y_data.txt
+fetching_data/live/PriceData/US02Y_state.json
+fetching_data/live/PriceData/US10Y_data.txt
+fetching_data/live/PriceData/US10Y_state.json
