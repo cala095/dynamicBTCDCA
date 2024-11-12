@@ -11,3 +11,9 @@ fetching_data/live/PriceData/US10Y_data.txt
 fetching_data/live/PriceData/US10Y_state.json
 fetching_data/live/PriceData/VIX_data.txt
 fetching_data/live/PriceData/VIX_state.json
+fetching_data/live/PriceData/GOLD_data.txt
+fetching_data/live/PriceData/GOLD_state.json
+fetching_data/live/PriceData/NDQ_data.txt
+fetching_data/live/PriceData/NDQ_state.json
+fetching_data/live/PriceData/SPX_data.txt
+fetching_data/live/PriceData/SPX_state.json
