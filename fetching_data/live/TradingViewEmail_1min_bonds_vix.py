@@ -17,7 +17,7 @@ SCOPES = ['https://mail.google.com/']
 # Global variables
 last_ticker_states = {}
 data_added = {}  # Tracks whether data was added for each ticker during the interval
-tickers = ['US10Y', 'US02Y', 'VIX']  # List of tickers to monitor
+tickers = ['US10Y', 'US02Y', 'VIX', 'SPX', 'GOLD', 'NDQ']  # List of tickers to monitor
 
 # Authenticate and create a service object
 def authenticate_gmail():
