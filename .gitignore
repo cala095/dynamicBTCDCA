@@ -9,3 +9,5 @@ fetching_data/live/PriceData/US02Y_data.txt
 fetching_data/live/PriceData/US02Y_state.json
 fetching_data/live/PriceData/US10Y_data.txt
 fetching_data/live/PriceData/US10Y_state.json
+fetching_data/live/PriceData/VIX_data.txt
+fetching_data/live/PriceData/VIX_state.json
