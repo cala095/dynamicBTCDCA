@@ -228,10 +228,11 @@ def get_last_timestamp_from_file(ticker):
     data_file = f"PriceData\\{ticker}_data.csv"
     if not os.path.exists(data_file):
         return None
-    dateparse = lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M')
-    df = pd.read_csv(data_file, parse_dates=['timestamp'], date_parser=dateparse)
+    df = pd.read_csv(data_file)
     if df.empty:
         return None
+    # Parse 'timestamp' column
+    df['timestamp'] = pd.to_datetime(df['timestamp'], format='%Y-%m-%d %H:%M')
     last_timestamp = df['timestamp'].iloc[-1]
     return last_timestamp
 
@@ -249,25 +250,25 @@ def process_ticker_data(ticker, data):
     # Convert current_timestamp to tz-naive and round to the nearest minute
     current_timestamp = current_timestamp.replace(tzinfo=None, second=0, microsecond=0)
 
-    # Load existing data into a DataFrame with correct date parsing
+    # Load existing data into a DataFrame without date_parser
     data_file = f"PriceData\\{ticker}_data.csv"
     if os.path.exists(data_file):
-        dateparse = lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M')
-        df_existing = pd.read_csv(data_file, parse_dates=['timestamp'], date_parser=dateparse)
+        df_existing = pd.read_csv(data_file)
     else:
         df_existing = pd.DataFrame(columns=['timestamp', 'price', 'volume'])
 
-    # Ensure 'timestamp' column in df_existing is datetime
-    df_existing['timestamp'] = pd.to_datetime(df_existing['timestamp'])
+    # Parse 'timestamp' column
+    if not df_existing.empty:
+        df_existing['timestamp'] = pd.to_datetime(df_existing['timestamp'], format='%Y-%m-%d %H:%M')
+
+    # Ensure last_timestamp is tz-naive
+    if last_timestamp and last_timestamp.tzinfo is not None:
+        last_timestamp = last_timestamp.replace(tzinfo=None)
 
     # If last_timestamp is None, initialize it to current_timestamp - 1 minute
     if last_timestamp is None:
         last_timestamp = current_timestamp - datetime.timedelta(minutes=1)
         last_price = current_price  # Initialize last_price to current_price
-
-    # Ensure last_timestamp is tz-naive
-    if last_timestamp.tzinfo is not None:
-        last_timestamp = last_timestamp.replace(tzinfo=None)
 
     # Check for time gaps and fill missing intervals
     time_difference = current_timestamp - last_timestamp
@@ -311,7 +312,7 @@ def process_ticker_data(ticker, data):
 
     # Sort the DataFrame by timestamp
     df.sort_values(by='timestamp', inplace=True)
-
+    
     # Debugging: Print DataFrames (optional)
     # print("df_existing:")
     # print(df_existing)
@@ -360,20 +361,22 @@ def sync_missing_data():
                     'volume': volumes
                 })
 
-                # Load existing data with correct date parsing
+                # Load existing data without date_parser
                 data_file = f"PriceData\\{ticker}_data.csv"
                 if os.path.exists(data_file):
-                    dateparse = lambda x: datetime.datetime.strptime(x, '%Y-%m-%d %H:%M')
-                    df_existing = pd.read_csv(data_file, parse_dates=['timestamp'], date_parser=dateparse)
+                    df_existing = pd.read_csv(data_file)
                 else:
                     df_existing = pd.DataFrame(columns=['timestamp', 'price', 'volume'])
 
-                # Ensure 'timestamp' columns are datetime
+                # Parse 'timestamp' columns
+                if not df_existing.empty:
+                    df_existing['timestamp'] = pd.to_datetime(df_existing['timestamp'], format='%Y-%m-%d %H:%M')
                 df_missing['timestamp'] = pd.to_datetime(df_missing['timestamp'])
-                df_existing['timestamp'] = pd.to_datetime(df_existing['timestamp'])
 
                 # Concatenate and aggregate
                 df = pd.concat([df_existing, df_missing], ignore_index=True)
+
+                df['timestamp'] = pd.to_datetime(df['timestamp'])
 
                 df = df.groupby('timestamp').agg({
                     'price': 'mean',
