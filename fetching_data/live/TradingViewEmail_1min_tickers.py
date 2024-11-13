@@ -11,6 +11,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from bs4 import BeautifulSoup
 from googleapiclient.errors import HttpError
+from google.auth.exceptions import RefreshError 
 
 # Define Gmail API scopes
 SCOPES = ['https://mail.google.com/']
@@ -27,13 +28,19 @@ def authenticate_gmail():
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+            try:
+                creds.refresh(Request())
+            except RefreshError:
+                print("Token has expired or been revoked. Deleting token.json and re-authenticating.")
+                os.remove('token.json')
+                return authenticate_gmail()
         else:
             flow = InstalledAppFlow.from_client_secrets_file('gmail_credential.json', SCOPES)
             creds = flow.run_local_server(port=0)
         with open('token.json', 'w') as token_file:
             token_file.write(creds.to_json())
     return build('gmail', 'v1', credentials=creds)
+
 
 def get_label_id(service, label_name):
     label_list = service.users().labels().list(userId='me').execute()
