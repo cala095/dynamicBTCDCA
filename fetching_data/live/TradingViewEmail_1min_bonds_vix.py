@@ -17,7 +17,7 @@ SCOPES = ['https://mail.google.com/']
 # Global variables
 last_ticker_states = {}
 data_added = {}  # Tracks whether data was added for each ticker during the interval
-tickers = ['US10Y', 'US02Y', 'VIX', 'SPX', 'GOLD', 'NDQ']  # List of tickers to monitor
+tickers = ['US10Y', 'US02Y', 'VIX', 'SPX', 'GOLD', 'NDQ', 'MOVE', 'DXY']  # List of tickers to monitor
 
 # Authenticate and create a service object
 def authenticate_gmail():
@@ -49,18 +49,19 @@ def fetch_and_process_emails(service):
     query = 'subject:"Alert" from:noreply@tradingview.com -label:Processed'
     emails = []
     page_token = None
+    maxResults = None #for debug purposes -> else None
 
     while True:
         try:
             if page_token:
-                results = service.users().messages().list(userId='me', q=query, pageToken=page_token).execute()
+                results = service.users().messages().list(userId='me', q=query, maxResults=maxResults, pageToken=page_token).execute()
             else:
-                results = service.users().messages().list(userId='me', q=query).execute()
+                results = service.users().messages().list(userId='me', q=query, maxResults=maxResults).execute()
             messages = results.get('messages', [])
             if messages:
                 emails.extend(messages)
             page_token = results.get('nextPageToken')
-            if not page_token:
+            if not page_token or maxResults:
                 break
         except Exception as e:
             print(f"An error occurred: {e}")
@@ -191,16 +192,18 @@ def load_last_ticker_state(ticker):
             state = json.load(f)
             last_timestamp = datetime.datetime.fromisoformat(state['last_timestamp'])
             last_price = state['last_price']
-            return last_timestamp, last_price
+            last_volume = state['last_volume']
+            return last_timestamp, last_price, last_volume
     else:
         print(f"no last state found for {ticker}")
-        return None, None
+        return None, None, None
 
-def save_last_ticker_state(ticker, last_timestamp, last_price):
+def save_last_ticker_state(ticker, last_timestamp, last_price, last_volume):
     state_file = f"PriceData\\{ticker}_state.json"
     state = {
         'last_timestamp': last_timestamp.isoformat(),
-        'last_price': last_price
+        'last_price': last_price,
+        'last_volume': last_volume
     }
     with open(state_file, 'w') as f:
         json.dump(state, f)
@@ -232,13 +235,14 @@ def append_to_ticker_file(ticker, line):
 
 def process_ticker_data(ticker, data):
     global data_added
-    last_timestamp, last_price = load_last_ticker_state(ticker)
+    last_timestamp, last_price, last_volume = load_last_ticker_state(ticker)
     try:
         current_timestamp = parse_time(data['time'])
     except ValueError as e:
         print(f"Error parsing time: {e}")
         return
     current_price = data['price']
+    current_volume = data['volume']
 
     # If last_timestamp is None, initialize it to current_timestamp - 1 minute
     if last_timestamp is None:
@@ -258,23 +262,24 @@ def process_ticker_data(ticker, data):
         # Update last_timestamp and last_price in the state
         last_timestamp = current_timestamp
         last_price = current_price
-        save_last_ticker_state(ticker, last_timestamp, last_price)
+        save_last_ticker_state(ticker, last_timestamp, last_price, current_volume)
         return
 
+    # Fill in missing intervals
     if total_minutes > 1:
-        # Fill in missing intervals
         for i in range(1, total_minutes):
             timestamp_to_add = last_timestamp + datetime.timedelta(minutes=i)
             if last_file_timestamp and timestamp_to_add <= last_file_timestamp:
                 continue  # Skip timestamps that already exist
             timestamp_str = timestamp_to_add.strftime('%d-%m-%y_%H-%M-%S')
-            line = f"{timestamp_str}, {last_price}\n"
+            volume_is_zero = current_volume = 0
+            line = f"{timestamp_str}, {last_price}, {volume_is_zero}\n"
             append_to_ticker_file(ticker, line)
 
     # Append the current data if it's newer than the last file timestamp
     if not last_file_timestamp or current_timestamp > last_file_timestamp:
         timestamp_str = current_timestamp.strftime('%d-%m-%y_%H-%M-%S')
-        line = f"{timestamp_str}, {current_price}\n"
+        line = f"{timestamp_str}, {current_price}, {current_volume}\n"
         append_to_ticker_file(ticker, line)
 
     # Update last_timestamp and last_price
@@ -282,7 +287,7 @@ def process_ticker_data(ticker, data):
     last_price = current_price
 
     # Save the last state
-    save_last_ticker_state(ticker, last_timestamp, last_price)
+    save_last_ticker_state(ticker, last_timestamp, last_price, current_volume)
 
     # Mark that data was added for this ticker
     data_added[ticker] = True
@@ -302,13 +307,15 @@ def clean_ticker_data(ticker):
             if not line:
                 continue  # Skip empty lines
             try:
-                timestamp_str, price_str = line.split(', ')
+                timestamp_str, price_str, volume_str = line.split(', ')
                 # Parse timestamp
                 timestamp_naive = datetime.datetime.strptime(timestamp_str, '%d-%m-%y_%H-%M-%S')
                 # Make timestamp timezone-aware in UTC
                 timestamp = timestamp_naive.replace(tzinfo=datetime.timezone.utc)
                 # Parse price
                 price = float(price_str)
+                # Parse volume
+                volume = float(volume_str)
                 # Use timestamp as the key to ensure uniqueness
                 cleaned_data[timestamp] = price
             except ValueError as e:
@@ -324,7 +331,7 @@ def clean_ticker_data(ticker):
             # Convert timezone-aware datetime to naive datetime before formatting
             timestamp_naive = timestamp.replace(tzinfo=None)
             timestamp_str = timestamp_naive.strftime('%d-%m-%y_%H-%M-%S')
-            line = f"{timestamp_str}, {price}\n"
+            line = f"{timestamp_str}, {price}, {volume}\n"
             f.write(line)
 
     print(f"Data file for ticker {ticker} cleaned.")
@@ -335,7 +342,7 @@ def sync_missing_data():
         if not data_added.get(ticker, False):
             # No new data was added for this ticker during the interval
             print(f"No new data for ticker {ticker} during this interval. Syncing data...")
-            last_timestamp, last_price = load_last_ticker_state(ticker)
+            last_timestamp, last_price, last_volume = load_last_ticker_state(ticker)
             if last_price is not None:
                 last_file_timestamp = get_last_timestamp_from_file(ticker)
                 # If last_file_timestamp is None, initialize it to last_timestamp
@@ -353,8 +360,8 @@ def sync_missing_data():
                         append_to_ticker_file(ticker, line)
                         # Update last_timestamp and last_price
                         last_timestamp = timestamp_to_add
-                        save_last_ticker_state(ticker, last_timestamp, last_price)
-                        print(f"Appended data for {ticker} at {timestamp_str} with price {last_price}")
+                        save_last_ticker_state(ticker, last_timestamp, last_price, 0)
+                        print(f"Appended data for {ticker} at {timestamp_str} with price {last_price} and zero volume")
                 else:
                     print(f"Data for {ticker} is already up to date.")
             else:
@@ -369,8 +376,8 @@ def main():
 
     # Initialize last ticker states
     for ticker in tickers:
-        last_timestamp, last_price = load_last_ticker_state(ticker)
-        last_ticker_states[ticker] = {'timestamp': last_timestamp, 'price': last_price}
+        last_timestamp, last_price, last_volume = load_last_ticker_state(ticker)
+        last_ticker_states[ticker] = {'timestamp': last_timestamp, 'price': last_price, 'volume': last_volume}
         data_added[ticker] = False  # Initialize data_added flag
 
     for ticker in tickers:
