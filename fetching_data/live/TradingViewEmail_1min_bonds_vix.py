@@ -4,12 +4,13 @@ import json
 import time
 import datetime
 import html
-import threading
+import pandas as pd
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from bs4 import BeautifulSoup
+from googleapiclient.errors import HttpError
 
 # Define Gmail API scopes
 SCOPES = ['https://mail.google.com/']
@@ -49,14 +50,18 @@ def fetch_and_process_emails(service):
     query = 'subject:"Alert" from:noreply@tradingview.com -label:Processed'
     emails = []
     page_token = None
-    maxResults = None #for debug purposes -> else None
+    maxResults = None  # For debug purposes -> else None
 
     while True:
         try:
             if page_token:
-                results = service.users().messages().list(userId='me', q=query, maxResults=maxResults, pageToken=page_token).execute()
+                results = service.users().messages().list(
+                    userId='me', q=query, maxResults=maxResults, pageToken=page_token
+                ).execute()
             else:
-                results = service.users().messages().list(userId='me', q=query, maxResults=maxResults).execute()
+                results = service.users().messages().list(
+                    userId='me', q=query, maxResults=maxResults
+                ).execute()
             messages = results.get('messages', [])
             if messages:
                 emails.extend(messages)
@@ -96,16 +101,19 @@ def fetch_and_process_emails(service):
     for email in processed_emails:
         process_email(email['message'])
         # Add the "Processed" label and remove from Inbox
-        service.users().messages().modify(
-            userId='me',
-            id=email['id'],
-            body={
-                'addLabelIds': [processed_label_id],
-                'removeLabelIds': ['INBOX']
-            }
-        ).execute()
-        # Delete the email after processing (uncomment if desired)
-        # service.users().messages().delete(userId='me', id=email['id']).execute()
+        try:
+            service.users().messages().modify(
+                userId='me',
+                id=email['id'],
+                body={
+                    'addLabelIds': [processed_label_id],
+                    'removeLabelIds': ['INBOX']
+                }
+            ).execute()
+            # Delete the email after processing (uncomment if desired)
+            # service.users().messages().delete(userId='me', id=email['id']).execute()
+        except HttpError as e:
+            print(f"An error occurred while modifying the email: {e}")
 
 def process_email(message):
     # Extract email body content
@@ -192,10 +200,10 @@ def load_last_ticker_state(ticker):
             state = json.load(f)
             last_timestamp = datetime.datetime.fromisoformat(state['last_timestamp'])
             last_price = state['last_price']
-            last_volume = state['last_volume']
+            last_volume = state.get('last_volume', 0)
             return last_timestamp, last_price, last_volume
     else:
-        print(f"no last state found for {ticker}")
+        print(f"No last state found for {ticker}")
         return None, None, None
 
 def save_last_ticker_state(ticker, last_timestamp, last_price, last_volume):
@@ -209,29 +217,14 @@ def save_last_ticker_state(ticker, last_timestamp, last_price, last_volume):
         json.dump(state, f)
 
 def get_last_timestamp_from_file(ticker):
-    data_file = f"{ticker}_data.txt"
+    data_file = f"PriceData\\{ticker}_data.csv"
     if not os.path.exists(data_file):
         return None
-    with open(data_file, 'r') as f:
-        lines = f.readlines()
-        if not lines:
-            return None
-        last_line = lines[-1].strip()
-        if not last_line:
-            return None
-        try:
-            timestamp_str, _ = last_line.split(', ')
-            last_timestamp_naive = datetime.datetime.strptime(timestamp_str, '%d-%m-%y_%H-%M-%S')
-            # Make last_timestamp timezone-aware, assuming UTC
-            last_timestamp = last_timestamp_naive.replace(tzinfo=datetime.timezone.utc)
-            return last_timestamp
-        except ValueError:
-            return None
-
-def append_to_ticker_file(ticker, line):
-    data_file = f"PriceData\\{ticker}_data.txt"
-    with open(data_file, 'a') as f:
-        f.write(line)
+    df = pd.read_csv(data_file, parse_dates=['timestamp'])
+    if df.empty:
+        return None
+    last_timestamp = df['timestamp'].iloc[-1]
+    return last_timestamp
 
 def process_ticker_data(ticker, data):
     global data_added
@@ -244,43 +237,40 @@ def process_ticker_data(ticker, data):
     current_price = data['price']
     current_volume = data['volume']
 
-    # If last_timestamp is None, initialize it to current_timestamp - 1 minute
-    if last_timestamp is None:
-        last_timestamp = current_timestamp - datetime.timedelta(minutes=1)
-        last_price = current_price  # Initialize last_price to current_price
+    # Convert current_timestamp to tz-naive by removing timezone info
+    current_timestamp = current_timestamp.replace(tzinfo=None)
 
-    # Now, check for time gaps
-    time_difference = current_timestamp - last_timestamp
-    total_minutes = int(time_difference.total_seconds() / 60)
+    # Round timestamp to the nearest minute
+    current_timestamp = current_timestamp.replace(second=0, microsecond=0)
 
-    # Get the last timestamp from the data file to check for overlaps
-    last_file_timestamp = get_last_timestamp_from_file(ticker)
+    # Create a dataframe for the current data point
+    df_new = pd.DataFrame({
+        'timestamp': [current_timestamp],
+        'price': [current_price],
+        'volume': [current_volume]
+    })
 
-    # If the current timestamp is the same as the last timestamp in the file, skip appending
-    if last_file_timestamp and current_timestamp <= last_file_timestamp:
-        print(f"Data for timestamp {current_timestamp} already exists in the file for {ticker}. Skipping append.")
-        # Update last_timestamp and last_price in the state
-        last_timestamp = current_timestamp
-        last_price = current_price
-        save_last_ticker_state(ticker, last_timestamp, last_price, current_volume)
-        return
+    # Load existing data into a dataframe
+    data_file = f"PriceData\\{ticker}_data.csv"
+    if os.path.exists(data_file):
+        df_existing = pd.read_csv(data_file, parse_dates=['timestamp'])
+    else:
+        df_existing = pd.DataFrame(columns=['timestamp', 'price', 'volume'])
 
-    # Fill in missing intervals
-    if total_minutes > 1:
-        for i in range(1, total_minutes):
-            timestamp_to_add = last_timestamp + datetime.timedelta(minutes=i)
-            if last_file_timestamp and timestamp_to_add <= last_file_timestamp:
-                continue  # Skip timestamps that already exist
-            timestamp_str = timestamp_to_add.strftime('%d-%m-%y_%H-%M-%S')
-            volume_is_zero = current_volume = 0
-            line = f"{timestamp_str}, {last_price}, {volume_is_zero}\n"
-            append_to_ticker_file(ticker, line)
+    # Append the new data
+    df = pd.concat([df_existing, df_new], ignore_index=True)
 
-    # Append the current data if it's newer than the last file timestamp
-    if not last_file_timestamp or current_timestamp > last_file_timestamp:
-        timestamp_str = current_timestamp.strftime('%d-%m-%y_%H-%M-%S')
-        line = f"{timestamp_str}, {current_price}, {current_volume}\n"
-        append_to_ticker_file(ticker, line)
+    # Aggregate data by timestamp (minute)
+    df = df.groupby('timestamp').agg({
+        'price': 'mean',  # Average the prices
+        'volume': 'sum'   # Sum the volumes
+    }).reset_index()
+
+    # Sort the dataframe by timestamp
+    df.sort_values(by='timestamp', inplace=True)
+
+    # Save the dataframe back to the CSV file
+    df.to_csv(data_file, index=False, date_format='%Y-%m-%d %H:%M')
 
     # Update last_timestamp and last_price
     last_timestamp = current_timestamp
@@ -292,55 +282,46 @@ def process_ticker_data(ticker, data):
     # Mark that data was added for this ticker
     data_added[ticker] = True
 
-def clean_ticker_data(ticker):
-    data_file = f"PriceData\\{ticker}_data.txt"
-    if not os.path.exists(data_file):
-        print(f"No data file found for ticker {ticker}.")
-        return
+def parse_time(data_time):
+    if isinstance(data_time, (int, float)):
+        # Assume it's a UNIX timestamp in seconds
+        return datetime.datetime.utcfromtimestamp(data_time)
+    elif isinstance(data_time, str):
+        try:
+            # Try to parse as ISO format
+            dt = datetime.datetime.fromisoformat(data_time.replace('Z', '+00:00'))
+            # Remove timezone info to make it tz-naive
+            return dt.replace(tzinfo=None)
+        except ValueError:
+            pass
+        try:
+            # Try to parse as UNIX timestamp in string
+            return datetime.datetime.utcfromtimestamp(float(data_time))
+        except ValueError:
+            pass
+    # If none of the above, raise an error
+    raise ValueError(f"Unable to parse time: {data_time}")
 
-    print(f"Cleaning data file for ticker {ticker}...")
-
-    cleaned_data = {}
-    with open(data_file, 'r') as f:
-        for line_number, line in enumerate(f, start=1):
-            line = line.strip()
-            if not line:
-                continue  # Skip empty lines
-            try:
-                timestamp_str, price_str, volume_str = line.split(', ')
-                # Parse timestamp
-                timestamp_naive = datetime.datetime.strptime(timestamp_str, '%d-%m-%y_%H-%M-%S')
-                # Make timestamp timezone-aware in UTC
-                timestamp = timestamp_naive.replace(tzinfo=datetime.timezone.utc)
-                # Parse price
-                price = float(price_str)
-                # Parse volume
-                volume = float(volume_str)
-                # Use timestamp as the key to ensure uniqueness
-                cleaned_data[timestamp] = price
-            except ValueError as e:
-                print(f"Error parsing line {line_number} in {data_file}: {e}")
-                continue  # Skip malformed lines
-
-    # Sort the data by timestamp
-    sorted_data = sorted(cleaned_data.items())
-
-    # Write the cleaned data back to the file
-    with open(data_file, 'w') as f:
-        for timestamp, price in sorted_data:
-            # Convert timezone-aware datetime to naive datetime before formatting
-            timestamp_naive = timestamp.replace(tzinfo=None)
-            timestamp_str = timestamp_naive.strftime('%d-%m-%y_%H-%M-%S')
-            line = f"{timestamp_str}, {price}, {volume}\n"
-            f.write(line)
-
-    print(f"Data file for ticker {ticker} cleaned.")
+def load_last_ticker_state(ticker):
+    state_file = f"PriceData\\{ticker}_state.json"
+    if os.path.exists(state_file):
+        with open(state_file, 'r') as f:
+            state = json.load(f)
+            last_timestamp = datetime.datetime.fromisoformat(state['last_timestamp'])
+            # Ensure last_timestamp is tz-naive
+            if last_timestamp.tzinfo is not None:
+                last_timestamp = last_timestamp.replace(tzinfo=None)
+            last_price = state['last_price']
+            last_volume = state.get('last_volume', 0)
+            return last_timestamp, last_price, last_volume
+    else:
+        print(f"No last state found for {ticker}")
+        return None, None, None
 
 def sync_missing_data():
-    current_time = datetime.datetime.utcnow().replace(second=0, microsecond=0, tzinfo=datetime.timezone.utc)
+    current_time = datetime.datetime.utcnow().replace(second=0, microsecond=0)
     for ticker in tickers:
         if not data_added.get(ticker, False):
-            # No new data was added for this ticker during the interval
             print(f"No new data for ticker {ticker} during this interval. Syncing data...")
             last_timestamp, last_price, last_volume = load_last_ticker_state(ticker)
             if last_price is not None:
@@ -351,17 +332,34 @@ def sync_missing_data():
                 time_difference = current_time - last_file_timestamp
                 total_minutes = int(time_difference.total_seconds() / 60)
                 if total_minutes >= 1:
-                    for i in range(1, total_minutes + 1):
-                        timestamp_to_add = last_file_timestamp + datetime.timedelta(minutes=i)
-                        if timestamp_to_add > current_time:
-                            break
-                        timestamp_str = timestamp_to_add.strftime('%d-%m-%y_%H-%M-%S')
-                        line = f"{timestamp_str}, {last_price}\n"
-                        append_to_ticker_file(ticker, line)
-                        # Update last_timestamp and last_price
-                        last_timestamp = timestamp_to_add
-                        save_last_ticker_state(ticker, last_timestamp, last_price, 0)
-                        print(f"Appended data for {ticker} at {timestamp_str} with price {last_price} and zero volume")
+                    # Create a dataframe with missing timestamps
+                    timestamps = [last_file_timestamp + datetime.timedelta(minutes=i) for i in range(1, total_minutes + 1)]
+                    prices = [last_price] * len(timestamps)
+                    volumes = [0] * len(timestamps)
+                    df_missing = pd.DataFrame({
+                        'timestamp': timestamps,
+                        'price': prices,
+                        'volume': volumes
+                    })
+                    # Load existing data
+                    data_file = f"PriceData\\{ticker}_data.csv"
+                    if os.path.exists(data_file):
+                        df_existing = pd.read_csv(data_file, parse_dates=['timestamp'])
+                    else:
+                        df_existing = pd.DataFrame(columns=['timestamp', 'price', 'volume'])
+                    # Concatenate and aggregate
+                    df = pd.concat([df_existing, df_missing], ignore_index=True)
+                    df = df.groupby('timestamp').agg({
+                        'price': 'mean',
+                        'volume': 'sum'
+                    }).reset_index()
+                    df.sort_values(by='timestamp', inplace=True)
+                    # Save back to CSV
+                    df.to_csv(data_file, index=False, date_format='%Y-%m-%d %H:%M')
+                    # Update last_timestamp
+                    last_timestamp = current_time
+                    save_last_ticker_state(ticker, last_timestamp, last_price, last_volume)
+                    print(f"Appended missing data for {ticker}.")
                 else:
                     print(f"Data for {ticker} is already up to date.")
             else:
@@ -380,13 +378,10 @@ def main():
         last_ticker_states[ticker] = {'timestamp': last_timestamp, 'price': last_price, 'volume': last_volume}
         data_added[ticker] = False  # Initialize data_added flag
 
-    for ticker in tickers:
-        clean_ticker_data(ticker)
-
     while True:
         fetch_and_process_emails(service)
         sync_missing_data()
-        print("sleep 60 sec")
+        print("Sleeping for 60 seconds...")
         time.sleep(60)  # Wait before checking again
 
 if __name__ == '__main__':

@@ -17,3 +17,12 @@ fetching_data/live/PriceData/NDQ_data.txt
 fetching_data/live/PriceData/NDQ_state.json
 fetching_data/live/PriceData/SPX_data.txt
 fetching_data/live/PriceData/SPX_state.json
+fetching_data/live/PriceData/DXY_data.csv
+fetching_data/live/PriceData/DXY_state.json
+fetching_data/live/PriceData/GOLD_data.csv
+fetching_data/live/PriceData/NDQ_data.csv
+fetching_data/live/PriceData/SPX_data.csv
+fetching_data/live/PriceData/US02Y_data.csv
+fetching_data/live/PriceData/US10Y_data.csv
+fetching_data/live/PriceData/VIX_data.csv
+fetching_data/live/PriceData.rar
