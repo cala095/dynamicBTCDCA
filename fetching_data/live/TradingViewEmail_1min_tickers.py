@@ -75,7 +75,7 @@ def fetch_and_process_emails(service):
             if not page_token or maxResults:
                 break
         except Exception as e:
-            print(f"An error occurred: {e}")
+            print(f"An error occurred during email listing: {e}")
             break
 
     if not emails:
@@ -90,15 +90,27 @@ def fetch_and_process_emails(service):
     processed_emails = []
     for msg in emails:
         msg_id = msg['id']
-        message = service.users().messages().get(userId='me', id=msg_id).execute()
-        internal_date = int(message['internalDate'])  # milliseconds since epoch
+        try:
+            message = service.users().messages().get(userId='me', id=msg_id).execute()
+            internal_date = int(message['internalDate'])  # milliseconds since epoch
 
-        # Get the email subject
-        headers = message['payload'].get('headers', [])
-        subject = next((header['value'] for header in headers if header['name'] == 'Subject'), 'No Subject')
-        print(f"Processing email ID: {msg_id}, Subject: {subject}")
+            # Get the email subject
+            headers = message['payload'].get('headers', [])
+            subject = next((header['value'] for header in headers if header['name'] == 'Subject'), 'No Subject')
+            print(f"Processing email ID: {msg_id}, Subject: {subject}")
 
-        processed_emails.append({'id': msg_id, 'message': message, 'internalDate': internal_date})
+            processed_emails.append({'id': msg_id, 'message': message, 'internalDate': internal_date})
+        except HttpError as error:
+            if error.resp.status == 404:
+                print(f"Message with ID {msg_id} not found. It may have been deleted or moved.")
+                continue
+            else:
+                print(f"An error occurred while retrieving message ID {msg_id}: {error}")
+                continue
+
+    if not processed_emails:
+        print("No emails to process after filtering.")
+        return
 
     # Sort emails by internalDate
     processed_emails.sort(key=lambda x: x['internalDate'])
@@ -117,7 +129,8 @@ def fetch_and_process_emails(service):
                 }
             ).execute()
         except HttpError as e:
-            print(f"An error occurred while modifying the email: {e}")
+            print(f"An error occurred while modifying the email ID {email['id']}: {e}")
+
 
 def process_email(message):
     # Extract email body content
