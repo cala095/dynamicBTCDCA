@@ -29,3 +29,5 @@ fetching_data/live/PriceData.rar
 fetching_data/history/barchart/shy (1 - 3 years maturity U.S. T.NOTE) 1m
 fetching_data/history/barchart/tnx 1m
 fetching_data/history/barchart/U.S. 2y yield 1d
+fetching_data/history/barchart/estimated_2yr_yield_1min_duration_method_adjusted.csv
+fetching_data/history/barchart/barchart.rar
