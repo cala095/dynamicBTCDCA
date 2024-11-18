@@ -4,7 +4,7 @@ import numpy as np
 # --- Step 1: Load SHY Intraday Data ---
 
 # Replace with the path to your merged SHY data file
-shy_data = pd.read_csv('shy_intraday_merged.csv')
+shy_data = pd.read_csv('shy (1 - 3 years maturity U.S. T.NOTE) 1m\\shy_intraday_merged.csv')
 
 # Convert 'Time' column to datetime
 shy_data['Time'] = pd.to_datetime(shy_data['Time'])
@@ -19,7 +19,7 @@ shy_data['Date'] = shy_data['Time'].dt.date
 # --- Step 2: Load 2-Year Treasury Yield Data ---
 
 # Replace with the path to your 2-year yield data file
-yield_data = pd.read_csv('usty2rt_daily_historical-data-11-15-2024.csv', skipfooter=1, engine='python')
+yield_data = pd.read_csv('U.S. 2y yield 1d\\usty2rt_daily_historical-data-11-15-2024.csv', skipfooter=1, engine='python')
 
 # Convert 'Time' column to datetime
 yield_data['Time'] = pd.to_datetime(yield_data['Time'], format='%m/%d/%Y')
@@ -139,28 +139,54 @@ output_data = pd.concat([
 output_data.sort_values('Time', inplace=True)
 output_data.reset_index(drop=True, inplace=True)
 
+# Convert yield to percentage format
+output_data['Estimated_Yield_%'] = output_data['Estimated_Yield_%'] * 100
+
 # Save to CSV
 output_file = 'estimated_2yr_yield_1min_duration_method_adjusted.csv'
 output_data.to_csv(output_file, index=False)
 
+
 print(f'Estimated yields saved to {output_file}')
+
+# --- Step 9: Fill Missing Minutes with Last Recorded Value ---
+
+# Ensure 'Time' is in datetime format
+output_data['Time'] = pd.to_datetime(output_data['Time'])
+
+# Set 'Time' as the index
+output_data.set_index('Time', inplace=True)
+
+# Group by date to prevent forward-filling across days
+grouped = output_data.groupby(output_data.index.date)
+
+# Create an empty list to hold resampled data
+resampled_groups = []
+
+for date, group in grouped:
+    # Resample to 1-minute intervals within the group
+    group_resampled = group.resample('1T').ffill()
+    resampled_groups.append(group_resampled)
+
+# Concatenate the resampled groups
+output_data_resampled = pd.concat(resampled_groups)
+
+# Reset index to have 'Time' as a column again
+output_data_resampled.reset_index(inplace=True)
 
 # --- Optional: Verify Sorting ---
 
-# Read the CSV file
-df = pd.read_csv('estimated_2yr_yield_1min_duration_method_adjusted.csv')
+# Ensure data is sorted by 'Time'
+output_data_resampled.sort_values('Time', inplace=True)
+output_data_resampled.reset_index(drop=True, inplace=True)
 
-# Convert 'Time' column to datetime
-df['Time'] = pd.to_datetime(df['Time'])
+# Save to CSV
+output_file = 'estimated_2yr_yield_1min_duration_method_adjusted.csv'
+output_data_resampled.to_csv(output_file, index=False)
 
-# Sort the values
-df_sorted = df.sort_values('Time')
-df_sorted.reset_index(drop=True, inplace=True)
-
-# Save sorted file
-df_sorted.to_csv('estimated_2yr_yield_1min_duration_method_adjusted.csv', index=False)
+print(f'Estimated yields saved to {output_file}')
 
 print("\nFirst 5 dates:")
-print(df_sorted['Time'].head())
+print(output_data_resampled['Time'].head())
 print("\nLast 5 dates:")
-print(df_sorted['Time'].tail())
+print(output_data_resampled['Time'].tail())
