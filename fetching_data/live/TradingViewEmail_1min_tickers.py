@@ -320,7 +320,7 @@ def process_ticker_data(ticker, data):
     # Aggregate data by timestamp (minute)
     df = df.groupby('timestamp').agg({
         'price': 'mean',  # Average the prices
-        'volume': 'sum'   # Sum the volumes
+        'volume': 'sum'   # Sum the volumes #TODO VOLUME
     }).reset_index()
 
     # Sort the DataFrame by timestamp
