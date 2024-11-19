@@ -222,8 +222,24 @@ def main(csv_file, api_key):
     except Exception as e:
         print(f"An error occurred: {e}")
 
+def read_api_key(file_path='apikey.txt'):
+    try:
+        with open(file_path, 'r') as file:
+            return file.read().strip()
+    except FileNotFoundError:
+        print("Error: apikey.txt file not found!")
+        return None
+    except Exception as e:
+        print(f"Error reading API key: {e}")
+        return None
+
 if __name__ == "__main__":
-    api_key = "freezaland2"  # Replace with your actual API key
-    csv_file = "PriceData\\btcusd_1-min_data.csv"  # Path to your CSV file
+    api_key = read_api_key()
+    if api_key is None:
+        print("Failed to load API key. Exiting...")
+        exit(1)
+        
+    csv_file = "PriceData\\btcusd_1-min_data.csv"
     print("Starting BTC data update script...")
     main(csv_file, api_key)
+

@@ -32,3 +32,14 @@ fetching_data/history/barchart/U.S. 2y yield 1d
 fetching_data/history/barchart/estimated_2yr_yield_1min_duration_method_adjusted.csv
 fetching_data/history/barchart/barchart.rar
 fetching_data/history/barchart/tnx_filled_data.csv
+fetching_data/history/backtest-market/dlarind-1m_bk.zip
+fetching_data/history/backtest-market/gc-1m_bk.zip
+fetching_data/history/backtest-market/nq-1m_bk-1.zip
+fetching_data/history/backtest-market/spx-1m-1.zip
+fetching_data/history/backtest-market/vix-1m_bk-1.zip
+fetching_data/history/backtest-market/dlarind-1m_bk/dlarind-1m_bk.csv
+fetching_data/history/backtest-market/gc-1m_bk/gc-1m_bk.csv
+fetching_data/history/backtest-market/nq-1m_bk-1/nq-1m_bk.csv
+fetching_data/history/backtest-market/spx-1m-1/spx-1m.csv
+fetching_data/history/backtest-market/vix-1m_bk-1/vix-1m_bk.csv
+fetching_data/live/apikey.txt
