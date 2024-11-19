@@ -43,3 +43,5 @@ fetching_data/history/backtest-market/nq-1m_bk-1/nq-1m_bk.csv
 fetching_data/history/backtest-market/spx-1m-1/spx-1m.csv
 fetching_data/history/backtest-market/vix-1m_bk-1/vix-1m_bk.csv
 fetching_data/live/apikey.txt
+fetching_data/history/merged_data.csv
+fetching_data/history/duplicate_datetimes.csv
