@@ -1,0 +1,3 @@
+#TODO VOLUME
+i have to update the method i'm using to sum volumes for the minute in trading view.
+instead of summing directly i have to subtract the last value known for the minute to the new one (wich will be bigger) and the update
