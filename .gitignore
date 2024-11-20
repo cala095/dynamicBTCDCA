@@ -55,3 +55,5 @@ fetching_data/history/historyMergers/Merged/Merged_NDQ.csv
 fetching_data/history/historyMergers/Merged/Merged_SPX.csv
 fetching_data/history/historyMergers/duplicate_datetimes_VIX.csv
 fetching_data/history/historyMergers/Merged/Merged_VIX.csv
+fetching_data/history/barchart/merged + filled data/estimated_2yr_yield_1min_duration_method_adjusted.csv
+fetching_data/history/barchart/merged + filled data/tnx_filled_data.csv
