@@ -45,3 +45,7 @@ fetching_data/history/backtest-market/vix-1m_bk-1/vix-1m_bk.csv
 fetching_data/live/apikey.txt
 fetching_data/history/merged_data.csv
 fetching_data/history/duplicate_datetimes.csv
+fetching_data/history/historyMergers/duplicate_datetimes_DXY.csv
+fetching_data/history/historyMergers/duplicate_datetimes_GOLD.csv
+fetching_data/history/historyMergers/Merged/Merged_DXY.csv
+fetching_data/history/historyMergers/Merged/Merged_GOLD.csv

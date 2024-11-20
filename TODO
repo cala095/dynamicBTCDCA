@@ -1,3 +1,6 @@
-#TODO VOLUME
+[] TODO VOLUME
 i have to update the method i'm using to sum volumes for the minute in trading view.
 instead of summing directly i have to subtract the last value known for the minute to the new one (wich will be bigger) and the update
+
+[] TODO OPTIONS VOLUME
+i should add the options volume to easely track sentiment (maybe when we go commercial it will cost a lot)
