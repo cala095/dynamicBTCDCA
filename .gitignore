@@ -62,3 +62,10 @@ fetching_data/history/historyMergers/duplicate_datetimes_US10Y.csv
 fetching_data/history/historyMergers/Merged/Merged_US02Y.csv
 fetching_data/history/historyMergers/Merged/Merged_US10Y.csv
 backup/
+fetching_data/history/LIVE PROCESSED/Processed_DXY.csv
+fetching_data/history/LIVE PROCESSED/Processed_GOLD.csv
+fetching_data/history/LIVE PROCESSED/Processed_NDQ.csv
+fetching_data/history/LIVE PROCESSED/Processed_SPX.csv
+fetching_data/history/LIVE PROCESSED/Processed_US02Y.csv
+fetching_data/history/LIVE PROCESSED/Processed_US10Y.csv
+fetching_data/history/LIVE PROCESSED/Processed_VIX.csv
