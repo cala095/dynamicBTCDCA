@@ -49,3 +49,9 @@ fetching_data/history/historyMergers/duplicate_datetimes_DXY.csv
 fetching_data/history/historyMergers/duplicate_datetimes_GOLD.csv
 fetching_data/history/historyMergers/Merged/Merged_DXY.csv
 fetching_data/history/historyMergers/Merged/Merged_GOLD.csv
+fetching_data/history/historyMergers/duplicate_datetimes_NDQ.csv
+fetching_data/history/historyMergers/duplicate_datetimes_SPX.csv
+fetching_data/history/historyMergers/Merged/Merged_NDQ.csv
+fetching_data/history/historyMergers/Merged/Merged_SPX.csv
+fetching_data/history/historyMergers/duplicate_datetimes_VIX.csv
+fetching_data/history/historyMergers/Merged/Merged_VIX.csv
