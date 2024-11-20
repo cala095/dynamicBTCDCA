@@ -13,10 +13,10 @@ print("**2. Load Live Data**")
 live = pd.read_csv('..\\..\\live\\PriceData\\SPX_data.csv', delimiter=',', header=0)
 
 print("**3. Preprocess Historical Data**")
-# Combine Date and Time into a single datetime column
+# Combine Date and Time into a single datetime column # **Adjust the format string to include seconds**
 historical['datetime'] = pd.to_datetime(
     historical['Date'] + ' ' + historical['Time'],
-    format='%d/%m/%Y %H:%M'
+    format='%d/%m/%Y %H:%M:%S' #time format for SPX include seconds in historical data
 )
 
 # Select relevant columns
@@ -26,10 +26,17 @@ historical = historical[['datetime', 'Open', 'Volume']]
 historical.rename(columns={'Open': 'Price'}, inplace=True)
 
 print("**4. Preprocess Live Data**")
+# **Check if live data includes seconds in the timestamp**
+# If live data includes seconds, adjust the format string accordingly
+
+# **Optional: Adjust format if necessary**
+# live_timestamp_format = '%Y-%m-%d %H:%M:%S'  # Use this if live data includes seconds
+live_timestamp_format = '%Y-%m-%d %H:%M'  # Use this if live data does not include seconds
+
 # Convert timestamp to datetime
 live['datetime'] = pd.to_datetime(
     live['timestamp'],
-    format='%Y-%m-%d %H:%M'
+    format=live_timestamp_format
 )
 
 # Check if 'volume' is in live data columns
@@ -67,7 +74,7 @@ print("Number of duplicate datetime entries:", duplicates.shape[0])
 if not duplicates.empty:
     # Optionally, save duplicates to a CSV for review
     duplicates.to_csv('duplicate_datetimes_SPX.csv', index=False)
-    print("Duplicate datetime entries saved to 'duplicate_datetimes.csv' for review.")
+    print("Duplicate datetime entries saved to 'duplicate_datetimes_SPX.csv' for review.")
 
     # Option A: Remove duplicates by keeping the first occurrence
     merged_data = merged_data.drop_duplicates(subset='datetime', keep='first')
@@ -106,4 +113,3 @@ outFile = "Merged_SPX.csv"
 merged_data.to_csv(f'Merged/{outFile}', index=False)
 
 print(f"Data merged and forward-filled successfully! The merged file is saved as {outFile}.")
-
