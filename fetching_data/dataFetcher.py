@@ -8,42 +8,50 @@ This function serves as a manager for the fetching scripts present in fetching_d
 import asyncio
 import logging
 import os
-import time
 from logging.handlers import RotatingFileHandler
 from datetime import datetime, timedelta
 
 # Define the directory path
-log_dir = 'loggin'
+log_dir = 'logging'  # Corrected 'loggin' to 'logging' for consistency
 
 # Create the directory if it doesn't exist
-if not os.path.exists(log_dir):
-    os.makedirs(log_dir)
+os.makedirs(log_dir, exist_ok=True)
 
-# Remove the global logging configuration since we'll use script-specific loggers
-# logging.basicConfig(...)  # Commented out or removed
+def setup_logger(name, log_file):
+    """
+    Sets up a logger with a RotatingFileHandler.
 
-async def monitor_script(name, cmd, event):
-    # Set up a logger for this script
+    Parameters:
+        name (str): The name of the logger.
+        log_file (str): The file path for the log file.
+
+    Returns:
+        logging.Logger: Configured logger.
+    """
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
 
-    # Create a RotatingFileHandler for this script's log file
-    handler = RotatingFileHandler(
-        os.path.join(log_dir, f'{name}.log'),
-        maxBytes=10*1024*1024,  # 10 MB
-        backupCount=5  # Keep up to 5 backup files
-    )
-    handler.setLevel(logging.INFO)
+    # Check if the logger already has handlers to avoid duplicate logs
+    if not logger.handlers:
+        handler = RotatingFileHandler(
+            log_file,
+            maxBytes=10 * 1024 * 1024,  # 10 MB
+            backupCount=5  # Keep up to 5 backup files
+        )
+        handler.setLevel(logging.INFO)
 
-    # Create a formatter and set it for the handler
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
+        formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
 
-    # Add the handler to the logger
-    logger.addHandler(handler)
+        logger.addHandler(handler)
+        logger.propagate = False
 
-    # Prevent messages from being propagated to the root logger
-    logger.propagate = False
+    return logger
+
+async def monitor_script(name, cmd, event):
+    # Set up a logger for this script
+    log_file = os.path.join(log_dir, f'{name}.log')
+    logger = setup_logger(name, log_file)
 
     logger.info(f"Starting {name}")
     try:
@@ -87,34 +95,16 @@ async def monitor_script(name, cmd, event):
 
 async def coordinate_processer(script_events):
     # Set up a logger for the processer
-    processer_logger = logging.getLogger('Processer')
-    processer_logger.setLevel(logging.INFO)
-
-    # Create a RotatingFileHandler for the processer's log file
-    handler = RotatingFileHandler(
-        os.path.join(log_dir, 'Processer.log'),
-        maxBytes=10*1024*1024,  # 10 MB
-        backupCount=5  # Keep up to 5 backup files
-    )
-    handler.setLevel(logging.INFO)
-
-    # Create a formatter and set it for the handler
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-
-    # Add the handler to the logger
-    processer_logger.addHandler(handler)
-
-    # Prevent messages from being propagated to the root logger
-    processer_logger.propagate = False
+    log_file = os.path.join(log_dir, 'Processer.log')
+    processer_logger = setup_logger('Processer', log_file)
 
     while True:
-        # Wait for both events to be set
+        # Wait for all events to be set
         await asyncio.gather(*(event.wait() for event in script_events.values()))
-        processer_logger.info("Both scripts have reached the waiting state.")
+        processer_logger.info("All scripts have reached the waiting state.")
 
         # Launch processer.py
-        processer_cmd = ['python', 'fetching_data/history/LIVE PROCESSED/processer.py']
+        processer_cmd = ['python', os.path.join('fetching_data', 'history', 'LIVE PROCESSED', 'processer.py')]
         processer_logger.info("Launching processer.py")
         try:
             processer_process = await asyncio.create_subprocess_exec(
@@ -161,8 +151,8 @@ async def coordinate_processer(script_events):
 async def main():
     # List of scripts to run
     scripts = [
-        ('Script1', ['python', 'live\\TradingViewEmail_1min_tickers.py']), 
-        ('Script2', ['python', 'live\\criptocompare_BTC_2012UPD.py']), 
+        ('Script1', ['python', os.path.join('live', 'TradingViewEmail_1min_tickers.py')]),
+        ('Script2', ['python', os.path.join('live', 'criptocompare_BTC_2012UPD.py')]),
     ]
 
     # Create events for each script
