@@ -17,6 +17,8 @@ log_dir = 'logging'
 
 # Create the directory if it doesn't exist
 os.makedirs(log_dir, exist_ok=True)
+# Base directory of scripts
+base_dir = os.path.abspath(os.path.dirname(__file__))
 
 def setup_logger(name, log_file): # Sets up a logger with a RotatingFileHandler.
 
@@ -109,7 +111,9 @@ async def coordinate_processer(script_events):
 
             # Launch processer.py
             processer_cmd = ['python', 'processer.py']
-            processer_cwd = os.path.abspath(os.path.join('fetching_data', 'history', 'LIVE PROCESSED'))
+            # Construct processer_cwd relative to base_dir
+            processer_cwd = os.path.join(base_dir, 'history', 'LIVE PROCESSED')
+            processer_cwd = os.path.abspath(processer_cwd)
             processer_logger.info(f"Launching processer.py in {processer_cwd}")
             print(f"Launching processer.py in {processer_cwd}", flush=True)
 
@@ -181,8 +185,6 @@ async def coordinate_processer(script_events):
         logging.exception(f"Unhandled exception in coordinate_processer: {e}")
 
 async def main():
-    # Base directory of your scripts
-    base_dir = os.path.abspath(os.path.dirname(__file__))
 
     # List of scripts to run with their commands and working directories
     scripts = [
