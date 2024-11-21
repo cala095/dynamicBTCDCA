@@ -423,7 +423,7 @@ def main():
     while True:
         fetch_and_process_emails(service)
         sync_missing_data()
-        print("Sleeping for 60 seconds...")
+        print("Waiting for the next minute...")
         time.sleep(60)  # Wait before checking again
 
 if __name__ == '__main__':
