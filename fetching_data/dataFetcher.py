@@ -10,6 +10,7 @@ import logging
 import os
 from logging.handlers import RotatingFileHandler
 from datetime import datetime, timedelta
+import sys
 
 # Define the directory path
 log_dir = 'logging'  # Corrected 'loggin' to 'logging' for consistency
@@ -17,17 +18,9 @@ log_dir = 'logging'  # Corrected 'loggin' to 'logging' for consistency
 # Create the directory if it doesn't exist
 os.makedirs(log_dir, exist_ok=True)
 
-def setup_logger(name, log_file):
-    """
-    Sets up a logger with a RotatingFileHandler.
 
-    Parameters:
-        name (str): The name of the logger.
-        log_file (str): The file path for the log file.
+def setup_logger(name, log_file): # Sets up a logger with a RotatingFileHandler.
 
-    Returns:
-        logging.Logger: Configured logger.
-    """
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
 
@@ -48,18 +41,19 @@ def setup_logger(name, log_file):
 
     return logger
 
-async def monitor_script(name, cmd, event):
+async def monitor_script(name, cmd, cwd, event):
     # Set up a logger for this script
     log_file = os.path.join(log_dir, f'{name}.log')
     logger = setup_logger(name, log_file)
 
     logger.info(f"Starting {name}")
     try:
-        # Start the subprocess
+        # Start the subprocess with the specified working directory
         process = await asyncio.create_subprocess_exec(
             *cmd,
             stdout=asyncio.subprocess.PIPE,
-            stderr=asyncio.subprocess.PIPE
+            stderr=asyncio.subprocess.PIPE,
+            cwd=cwd  # Set the working directory
         )
 
         async def read_stream(stream, log_level, stream_name):
@@ -104,13 +98,15 @@ async def coordinate_processer(script_events):
         processer_logger.info("All scripts have reached the waiting state.")
 
         # Launch processer.py
-        processer_cmd = ['python', os.path.join('fetching_data', 'history', 'LIVE PROCESSED', 'processer.py')]
+        processer_cmd = ['python', 'processer.py']
+        processer_cwd = os.path.join('fetching_data', 'history', 'LIVE PROCESSED')
         processer_logger.info("Launching processer.py")
         try:
             processer_process = await asyncio.create_subprocess_exec(
                 *processer_cmd,
                 stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE
+                stderr=asyncio.subprocess.PIPE,
+                cwd=processer_cwd  # Set the working directory
             )
 
             # Read processer.py output (optional)
@@ -149,19 +145,26 @@ async def coordinate_processer(script_events):
         await asyncio.sleep(wait_seconds)
 
 async def main():
-    # List of scripts to run
+    # Base directory of your scripts
+    base_dir = os.path.abspath(os.path.dirname(__file__))
+
+    # List of scripts to run with their commands and working directories
     scripts = [
-        ('Script1', ['python', os.path.join('live', 'TradingViewEmail_1min_tickers.py')]),
-        ('Script2', ['python', os.path.join('live', 'criptocompare_BTC_2012UPD.py')]),
+        ('TradingViewEmail_1min_tickers',
+         ['python', 'TradingViewEmail_1min_tickers.py'],
+         os.path.join(base_dir, 'live')),
+        ('criptocompare_BTC_1m',
+         ['python', 'criptocompare_BTC_1m.py'],
+         os.path.join(base_dir, 'live')),
     ]
 
     # Create events for each script
-    script_events = {name: asyncio.Event() for name, cmd in scripts}
+    script_events = {name: asyncio.Event() for name, cmd, cwd in scripts}
 
     # Start monitoring all scripts concurrently
     monitor_tasks = [
-        asyncio.create_task(monitor_script(name, cmd, script_events[name]))
-        for name, cmd in scripts
+        asyncio.create_task(monitor_script(name, cmd, cwd, script_events[name]))
+        for name, cmd, cwd in scripts
     ]
 
     # Start the coordinator task
@@ -172,4 +175,6 @@ async def main():
 
 # Run the main coroutine
 if __name__ == "__main__":
+    if sys.platform == 'win32':
+        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
     asyncio.run(main())
