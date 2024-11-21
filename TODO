@@ -12,3 +12,6 @@ i should add the options volume to easely track sentiment (maybe when we go comm
 
 [] OPTIMIZE processer.py
 i'm reading the whole file i can just check the last line and append the live data since they should both be clean at this point
+
+[] IMPROVE TERMINAL UPDATES FOR processer.py WHEN MANAGED AND LAUNCHED BY dataFetcher.py  
+terminal don't show update for it untill completition but it works and logs correctly
