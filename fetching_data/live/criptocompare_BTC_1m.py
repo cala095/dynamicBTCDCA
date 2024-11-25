@@ -239,7 +239,7 @@ if __name__ == "__main__":
         print("Failed to load API key. Exiting...")
         exit(1)
         
-    csv_file = "PriceData\\btcusd_1-min_data.csv"
+    csv_file = "PriceData\\BTCUSD_data.csv"
     print("Starting BTC data update script...")
     main(csv_file, api_key)
 

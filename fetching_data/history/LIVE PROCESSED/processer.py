@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import shutil
 
 def update_processed_data(ticker_name, processed_file, live_file):
     print(f"**Updating {ticker_name} Data**")
@@ -82,8 +83,22 @@ def update_processed_data(ticker_name, processed_file, live_file):
 
     print(f"Data for {ticker_name} updated successfully! The file '{processed_file}' has been overwritten with the latest data.\n")
 
+def copy_btc_data():
+    source_file = '..\\..\\live\\PriceData\\BTCUSD_data.csv'
+    destination_file = 'Processed_BTC.csv'
+    
+    print("**Copying BTC Data**")
+    try:
+        shutil.copy2(source_file, destination_file)
+        print(f"BTC data copied successfully to {destination_file}\n")
+    except Exception as e:
+        print(f"Error copying BTC data: {str(e)}\n")
 
 if __name__ == "__main__":
+    # BTC data
+    copy_btc_data()
+
+    # tickers
     tickers = ['DXY', 'GOLD', 'NDQ', 'US02Y', 'US10Y', 'VIX', 'SPX']
     for ticker in tickers:
         processed_file_path = f'Processed_{ticker}.csv'
