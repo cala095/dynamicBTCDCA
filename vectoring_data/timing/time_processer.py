@@ -15,13 +15,10 @@ def resample_data(file_path, output_base_dir):
         return
     
     df[time_col] = pd.to_datetime(df[time_col])
-    df.set_index(time_col, inplace=True)
-    
     # Save original data as '1 minute' data
     one_minute_dir = os.path.join(output_base_dir, '1 minute')
     os.makedirs(one_minute_dir, exist_ok=True)
     one_minute_file = os.path.join(one_minute_dir, os.path.basename(file_path))
-
     df.set_index(time_col, inplace=True)
     
     # Check which price columns are present
