@@ -1,1 +1,0 @@
-for the first deploy i have copied the files from LIVE PROCESSED and from LIVE  to vectoring_data\timing\1 minute

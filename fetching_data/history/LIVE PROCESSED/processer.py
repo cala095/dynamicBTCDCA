@@ -1,6 +1,6 @@
 import pandas as pd
 import os
-import shutil
+from datetime import datetime
 
 def update_processed_data(ticker_name, processed_file, live_file):
     print(f"**Updating {ticker_name} Data**")
@@ -84,15 +84,21 @@ def update_processed_data(ticker_name, processed_file, live_file):
     print(f"Data for {ticker_name} updated successfully! The file '{processed_file}' has been overwritten with the latest data.\n")
 
 def copy_btc_data():
-    source_file = '..\\..\\live\\PriceData\\BTCUSD_data.csv'
-    destination_file = 'Processed_BTC.csv'
-    
-    print("**Copying BTC Data**")
     try:
-        shutil.copy2(source_file, destination_file)
-        print(f"BTC data copied successfully to {destination_file}\n")
+        print("** Reading BTCUSD_data.csv **")
+        df = pd.read_csv('..\\..\\live\\PriceData\\BTCUSD_data.csv')
+
+        print("** Convert Unix time to formatted datetime **")
+        df['Formatted_Time'] = df['Timestamp'].apply(lambda x: datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S'))
+
+        # Reorder columns to put Formatted_Time at the beginning
+        cols = ['Formatted_Time'] + [col for col in df.columns if col != 'Formatted_Time']
+        df = df[cols]
+
+        print("** Save to a new CSV file **")
+        df.to_csv('Processed_BTC.csv', index=False)
     except Exception as e:
-        print(f"Error copying BTC data: {str(e)}\n")
+        print(f"Error transforming BTC data: {str(e)}\n")
 
 if __name__ == "__main__":
     # BTC data
