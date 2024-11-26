@@ -2,14 +2,43 @@ import pandas as pd
 import os
 
 def resample_data(file_path, output_base_dir):
-    # Read the data with assigned headers
+    # Read the data
     df = pd.read_csv(file_path)
     
-    # Ensure 'Formatted_Time' is datetime
-    df['Formatted_Time'] = pd.to_datetime(df['Formatted_Time'])
+    # Identify the time column and set it as index
+    if 'Formatted_Time' in df.columns:
+        time_col = 'Formatted_Time'
+    elif 'datetime' in df.columns:
+        time_col = 'datetime'
+    else:
+        print(f"Time column not found in {file_path}")
+        return
     
-    # Set 'Formatted_Time' as index
-    df.set_index('Formatted_Time', inplace=True)
+    df[time_col] = pd.to_datetime(df[time_col])
+    df.set_index(time_col, inplace=True)
+    
+    # Check which price columns are present
+    if {'Open', 'High', 'Low', 'Close'}.issubset(df.columns):
+        # Data is in OHLC format
+        agg_dict = {
+            'Open': 'first',
+            'High': 'max',
+            'Low': 'min',
+            'Close': 'last'
+        }
+    elif 'Price' in df.columns:
+        # Data is in Price format
+        # For resampling, use 'Price' to compute 'Open', 'High', 'Low', 'Close'
+        agg_dict = {
+            'Price': ['first', 'max', 'min', 'last']
+        }
+    else:
+        print(f"No recognizable price columns found in {file_path}")
+        return
+    
+    # Handle Volume if present
+    if 'Volume' in df.columns:
+        agg_dict['Volume'] = 'sum'
     
     # Define the time frames and their corresponding resampling rules
     time_frames = [
@@ -22,44 +51,56 @@ def resample_data(file_path, output_base_dir):
     
     # Process each time frame independently
     for dir_name, resample_rule, label, closed in time_frames:
-        # Resample the original data
-        resampled = df.resample(resample_rule, label=label, closed=closed).agg({
-            'Open': 'first',
-            'High': 'max',
-            'Low': 'min',
-            'Close': 'last',
-            'Volume': 'sum',
-        })
+        # Resample the data
+        resampled = df.resample(resample_rule, label=label, closed=closed).agg(agg_dict)
         
-        # Drop periods with NaN values
+        # If 'Price' was used, flatten MultiIndex columns and rename
+        if 'Price' in df.columns:
+            # Flatten the MultiIndex columns
+            resampled.columns = ['_'.join(col).strip() if isinstance(col, tuple) else col for col in resampled.columns.values]
+            # Rename columns to standard OHLC names
+            column_mapping = {
+                'Price_first': 'Open',
+                'Price_max': 'High',
+                'Price_min': 'Low',
+                'Price_last': 'Close'
+            }
+            if 'Volume' in df.columns:
+                column_mapping['Volume'] = 'Volume'
+            resampled.rename(columns=column_mapping, inplace=True)
+        else:
+            # For OHLC data, columns are already named correctly
+            pass
+        
+        # Drop periods with NaN values in OHLC columns
         resampled.dropna(subset=['Open', 'High', 'Low', 'Close'], inplace=True)
         
-        # Reset index to get 'Formatted_Time' back as a column
+        # Reset index to get the time column back as a column
         resampled.reset_index(inplace=True)
         
         # Create the output directory
         output_dir = os.path.join(output_base_dir, dir_name)
         os.makedirs(output_dir, exist_ok=True)
         
-        # Save the resampled data
+        # Save the resampled data to CSV
         output_file = os.path.join(output_dir, os.path.basename(file_path))
         resampled.to_csv(output_file, index=False)
 
 if __name__ == "__main__":
     # Define the input and output directories
     input_dir = '../../fetching_data/history/LIVE PROCESSED'
-    output_base_dir = 'resampled_data'  # Set your desired output base directory
+    output_base_dir = 'resampled_data'
     
     # Ensure the input directory exists
     if not os.path.exists(input_dir):
         print(f"Input directory {input_dir} does not exist.")
         exit(1)
     
-    # Get the list of .csv files in the input directory
-    csv_files = [f for f in os.listdir(input_dir) if f.endswith('BTC.csv')]
+    # Get the list of CSV files in the input directory
+    csv_files = [f for f in os.listdir(input_dir) if f.endswith('.csv')]
     
     if not csv_files:
-        print(f"No .csv files found in {input_dir}.")
+        print(f"No CSV files found in {input_dir}.")
         exit(1)
     
     # Process each file
