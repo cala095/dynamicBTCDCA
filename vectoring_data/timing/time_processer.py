@@ -20,6 +20,9 @@ def resample_data(file_path, output_base_dir):
     # Initialize the data to be resampled as the 1-minute data
     current_data = df.copy()
 
+    # Get the last timestamp in the data
+    last_timestamp = current_data.index.max()
+
     # Define the time frames and their corresponding resampling rules
     time_frames = [
         ('1 hour', 'H'),
@@ -31,8 +34,16 @@ def resample_data(file_path, output_base_dir):
 
     # Process each time frame sequentially
     for dir_name, resample_rule in time_frames:
+        # Set label and closed parameters based on resample frequency
+        if resample_rule in ['W', 'M', 'Y']:
+            label = 'right'
+            closed = 'right'
+        else:
+            label = 'left'
+            closed = 'right'
+
         # Resample the current data
-        resampled = current_data.resample(resample_rule).agg({
+        resampled = current_data.resample(resample_rule, label=label, closed=closed).agg({
             'Open': 'first',
             'High': 'max',
             'Low': 'min',
@@ -41,7 +52,24 @@ def resample_data(file_path, output_base_dir):
         })
 
         # Drop periods with NaN values (e.g., periods with no data)
-        resampled.dropna(subset=['Open', 'High', 'Low', 'Close'], inplace=True)
+        # resampled.dropna(subset=['Open', 'High', 'Low', 'Close'], inplace=True)
+
+        # Adjust filtering for 'M' and 'Y' resampling
+        if resample_rule == 'W':
+            # Calculate the end of the current week for last_timestamp
+            last_period = (last_timestamp + pd.offsets.Week(weekday=6)).normalize()
+            resampled = resampled[resampled.index <= last_period]
+        elif resample_rule == 'M':
+            # Calculate the end of the current month for last_timestamp
+            last_period = (last_timestamp + pd.offsets.MonthEnd(0)).normalize()
+            resampled = resampled[resampled.index <= last_period]
+        elif resample_rule == 'Y':
+            # Calculate the end of the current year for last_timestamp
+            last_period = (last_timestamp + pd.offsets.YearEnd(0)).normalize()
+            resampled = resampled[resampled.index <= last_period]
+        else:
+            # For other frequencies, use the original last_timestamp
+            resampled = resampled[resampled.index <= last_timestamp]
 
         # Reset index to get 'Formatted_Time' back as a column
         resampled.reset_index(inplace=True)
