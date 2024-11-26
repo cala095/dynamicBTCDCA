@@ -1,7 +1,14 @@
 import pandas as pd
 import os
+import shutil
 
 def resample_data(file_path, output_base_dir):
+    # Save original data as '1 minute' data
+    one_minute_dir = os.path.join(output_base_dir, '1 minute')
+    os.makedirs(one_minute_dir, exist_ok=True)
+    one_minute_file = os.path.join(one_minute_dir, os.path.basename(file_path))
+    shutil.copy(file_path, one_minute_file.replace('.csv', '_1m.csv'))
+    
     # Read the data
     df = pd.read_csv(file_path)
     
@@ -13,12 +20,6 @@ def resample_data(file_path, output_base_dir):
     else:
         print(f"Time column not found in {file_path}")
         return
-    
-     # Save original data as '1 minute' data
-    one_minute_dir = os.path.join(output_base_dir, '1 minute')
-    os.makedirs(one_minute_dir, exist_ok=True)
-    one_minute_file = os.path.join(one_minute_dir, os.path.basename(file_path))
-    df.to_csv(one_minute_file, index=False)
 
     df[time_col] = pd.to_datetime(df[time_col])
     df.set_index(time_col, inplace=True)
@@ -90,7 +91,7 @@ def resample_data(file_path, output_base_dir):
         
         # Save the resampled data to CSV
         output_file = os.path.join(output_dir, os.path.basename(file_path))
-        resampled.to_csv(output_file, index=False)
+        resampled.to_csv(output_file.replace('.csv','_' + resample_rule + '.csv'), index=False)
 
 if __name__ == "__main__":
     # Define the input and output directories
