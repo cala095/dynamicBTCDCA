@@ -82,3 +82,4 @@ vectoring_data/timing/1 week/Processed_BTC.csv
 vectoring_data/timing/1 year/Processed_BTC.csv
 fetching_data/logging/TradingViewEmail_1min_tickers.log.1
 vectoring_data/timing/resampled_data/
+vectoring_data/timing/duplicate_reports/1 minute/Processed_BTC_1m_duplicates.csv

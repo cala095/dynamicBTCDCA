@@ -89,7 +89,8 @@ def copy_btc_data():
         df = pd.read_csv('..\\..\\live\\PriceData\\BTCUSD_data.csv')
 
         print("** Convert Unix time to formatted datetime **")
-        df['Formatted_Time'] = df['Timestamp'].apply(lambda x: datetime.fromtimestamp(x).strftime('%Y-%m-%d %H:%M:%S'))
+        # Convert 'Timestamp' to datetime assuming it's in seconds and in UTC
+        df['Formatted_Time'] = pd.to_datetime(df['Timestamp'], unit='s', utc=True).dt.strftime('%Y-%m-%d %H:%M:%S')
 
         # Reorder columns to put Formatted_Time at the beginning
         cols = ['Formatted_Time'] + [col for col in df.columns if col != 'Formatted_Time']
