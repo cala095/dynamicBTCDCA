@@ -83,19 +83,59 @@ def update_processed_data(ticker_name, processed_file, live_file):
 
     print(f"Data for {ticker_name} updated successfully! The file '{processed_file}' has been overwritten with the latest data.\n")
 
+
 def copy_btc_data():
     try:
         print("** Reading BTCUSD_data.csv **")
         df = pd.read_csv('..\\..\\live\\PriceData\\BTCUSD_data.csv')
-
+        
         print("** Convert Unix time to formatted datetime **")
         # Convert 'Timestamp' to datetime assuming it's in seconds and in UTC
-        df['Formatted_Time'] = pd.to_datetime(df['Timestamp'], unit='s', utc=True).dt.strftime('%Y-%m-%d %H:%M:%S')
-
+        df['Datetime'] = pd.to_datetime(df['Timestamp'], unit='s', utc=True)
+        
+        # Remove duplicates based on 'Timestamp'
+        print("** Removing duplicates based on Timestamp **")
+        duplicates = df.duplicated(subset='Timestamp', keep=False)
+        num_duplicates = duplicates.sum()
+        if num_duplicates > 0:
+            # Create a DataFrame of duplicated records
+            duplicated_records = df[duplicates]
+            # Save duplicated records to a CSV file
+            duplicated_records.to_csv('duplicated_records.csv', index=False)
+            print(f"Removed {num_duplicates} duplicate entries.")
+            print("Duplicated records have been saved to duplicated_records.csv")
+        else:
+            print("No duplicates found.")
+        
+        # Ensure the data is sorted by timestamp
+        df.sort_values(by='Datetime', inplace=True)
+        
+        # Check for missing minutes
+        print("** Checking for missing minutes **")
+        start = df['Datetime'].min()
+        end = df['Datetime'].max()
+        complete_range = pd.date_range(start=start, end=end, freq='T', tz='UTC')
+        existing_timestamps = pd.to_datetime(df['Datetime'])
+        missing_minutes = complete_range[~complete_range.isin(existing_timestamps)]
+        
+        if len(missing_minutes) > 0:
+            print(f"Found {len(missing_minutes)} missing minutes.")
+            # Convert missing_minutes to a DataFrame
+            missing_df = pd.DataFrame(missing_minutes, columns=['Missing_Time'])
+            # Save to a CSV file
+            missing_df.to_csv('missing_minutes.csv', index=False)
+            print("Missing minutes have been saved to missing_minutes.csv")
+        else:
+            print("No missing minutes found.")
+        
+        # Convert 'Datetime' to formatted string if needed
+        df['Formatted_Time'] = df['Datetime'].dt.strftime('%Y-%m-%d %H:%M:%S')
+        
         # Reorder columns to put Formatted_Time at the beginning
-        cols = ['Formatted_Time'] + [col for col in df.columns if col != 'Formatted_Time']
+        cols = ['Formatted_Time'] + [col for col in df.columns if col != 'Formatted_Time' and col != 'Datetime']
         df = df[cols]
-
+        
+        # Save the processed data to a new CSV file
         print("** Save to a new CSV file **")
         df.to_csv('Processed_BTC.csv', index=False)
     except Exception as e:
