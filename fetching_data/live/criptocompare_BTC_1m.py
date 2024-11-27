@@ -1,6 +1,6 @@
 import requests
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import time
 import os
 
@@ -59,7 +59,7 @@ def download_missing_data(api_key, last_timestamp):
                 if 'Data' in data and 'Data' in data['Data']:
                     df = pd.DataFrame(data['Data']['Data'])
                     all_data.append(df)
-                    print(f"Downloaded data up to {datetime.fromtimestamp(toTs)}")
+                    print(f"Downloaded data up to {datetime.fromtimestamp(toTs, tz=timezone.utc)}")
                 else:
                     print("No data found in response.")
                     break
@@ -137,7 +137,7 @@ def main(csv_file, api_key):
             print("No valid timestamp found in CSV file.")
             return
 
-        print(f"Starting from last timestamp: {datetime.fromtimestamp(last_timestamp)}")
+        print(f"Starting from last timestamp: {datetime.fromtimestamp(last_timestamp, tz=timezone.utc)}")
 
         # Download missing data and clean it
         new_data = download_missing_data(api_key, last_timestamp)
@@ -199,7 +199,7 @@ def main(csv_file, api_key):
 
                         # Update last_timestamp
                         last_timestamp = new_timestamp
-                        print(f"Appended new record to {csv_file} at {datetime.fromtimestamp(new_timestamp)}")
+                        print(f"Appended new record to {csv_file} at {datetime.fromtimestamp(new_timestamp, tz=timezone.utc)}")
                     else:
                         print("No new data available yet.")
                 else:
