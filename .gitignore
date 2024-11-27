@@ -94,3 +94,11 @@ fetching_data/history/backtest-market/btcusd-1m/merged_minutes.log
 fetching_data/history/backtest-market/btcusd-1m/merged_output.csv
 fetching_data/history/backtest-market/btcusd-1m/Processed_BTC_mod_for_merge.csv
 fetching_data/history/backtest-market/btcusd-1m/unix_merged_output.csv
+fetching_data/history/LIVE PROCESSED.rar
+fetching_data/history/historyMergers/Merged/timezoneConverted_data/DXY_UTC.csv
+fetching_data/history/historyMergers/Merged/timezoneConverted_data/GOLD_UTC.csv
+fetching_data/history/historyMergers/Merged/timezoneConverted_data/NDQ_UTC.csv
+fetching_data/history/historyMergers/Merged/timezoneConverted_data/SPX_UTC.csv
+fetching_data/history/historyMergers/Merged/timezoneConverted_data/US02Y_UTC.csv
+fetching_data/history/historyMergers/Merged/timezoneConverted_data/US10Y_UTC.csv
+fetching_data/history/historyMergers/Merged/timezoneConverted_data/VIX_UTC.csv
