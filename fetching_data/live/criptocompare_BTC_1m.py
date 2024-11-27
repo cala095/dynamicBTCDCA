@@ -27,7 +27,7 @@ def download_missing_data(api_key, last_timestamp):
     base_url = 'https://min-api.cryptocompare.com/data/v2/histominute'
 
     # Subtract 2 minutes from current time to ensure data is available
-    end_timestamp = int((datetime.now() - timedelta(minutes=1)).timestamp())
+    end_timestamp = int((datetime.now(timezone.utc) - timedelta(minutes=1)).timestamp())
 
     all_data = []
 
@@ -38,6 +38,7 @@ def download_missing_data(api_key, last_timestamp):
         # Calculate the number of data points to fetch
         minutes_to_fetch = int((toTs - fromTs) / 60) + 1  # +1 to include both endpoints
         if minutes_to_fetch <= 0:
+            print(f'minutes_to_fetch < 0: {minutes_to_fetch}... returning')
             break
 
         # Since limit = number of data points - 1
@@ -59,7 +60,7 @@ def download_missing_data(api_key, last_timestamp):
                 if 'Data' in data and 'Data' in data['Data']:
                     df = pd.DataFrame(data['Data']['Data'])
                     all_data.append(df)
-                    print(f"Downloaded data up to {datetime.fromtimestamp(toTs, tz=timezone.utc)}")
+                    print(f"Downloaded data up to {datetime.fromtimestamp(toTs, timezone.utc)}")
                 else:
                     print("No data found in response.")
                     break
@@ -95,7 +96,7 @@ def fetch_latest_data(api_key):
     Fetches the latest 1-minute BTC data point.
     """
     base_url = 'https://min-api.cryptocompare.com/data/v2/histominute'
-    toTs = int((datetime.now() - timedelta(minutes=1)).timestamp())
+    toTs = int((datetime.now(timezone.utc) - timedelta(minutes=1)).timestamp())
     params = {
         'api_key': api_key,
         'fsym': 'BTC',
@@ -137,7 +138,7 @@ def main(csv_file, api_key):
             print("No valid timestamp found in CSV file.")
             return
 
-        print(f"Starting from last timestamp: {datetime.fromtimestamp(last_timestamp, tz=timezone.utc)}")
+        print(f"Starting from last timestamp: {datetime.fromtimestamp(last_timestamp, timezone.utc)}")
 
         # Download missing data and clean it
         new_data = download_missing_data(api_key, last_timestamp)
@@ -199,7 +200,7 @@ def main(csv_file, api_key):
 
                         # Update last_timestamp
                         last_timestamp = new_timestamp
-                        print(f"Appended new record to {csv_file} at {datetime.fromtimestamp(new_timestamp, tz=timezone.utc)}")
+                        print(f"Appended new record to {csv_file} at {datetime.fromtimestamp(new_timestamp, timezone.utc)}")
                     else:
                         print("No new data available yet.")
                 else:
@@ -207,7 +208,7 @@ def main(csv_file, api_key):
 
                 # Wait until the start of the next minute
                 print("Waiting for the next minute...")
-                now = datetime.now()
+                now = datetime.now(timezone.utc)
                 sleep_seconds = 60 - now.second
                 time.sleep(sleep_seconds)
 
