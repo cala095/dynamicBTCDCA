@@ -2,7 +2,7 @@ MUST HAVE
 -------------------------------------------------------------
 [x] CHECK THE TIMEZONE OF THE DATA ACQUIRED FROM THE DATA VENDOR
 
-[] CREATE THE METRICS ON THE DATA (MACD, etc.) FOR THE FEATURES VECTOR FOR ALL THE NEEDED TIME WINDOWS (1H, 1D, 1W, 1M, 1Y)
+[x] CREATE THE METRICS ON THE DATA (MACD, etc.) FOR THE FEATURES VECTOR FOR ALL THE NEEDED TIME WINDOWS (1H, 1D, 1W, 1M, 1Y)
 
 [] TODO VOLUME
 i have to update the method i'm using to sum volumes for the minute in trading view.
@@ -14,6 +14,8 @@ instead of summing directly i have to subtract the last value known for the minu
 [] HANDLE BTC DATA IN LIVE
 i have downloaded the historical 1m and i'm keeping it updated by using the criptocompare 100k monthly api request of criptocompare
 but directory position for the file it is not right -> it should not be only in LIVE -> processing it for the indicators by creating another dir to save it make sense?
+
+[] SWAP THE DEVELOPER API TO ACCESS GMAIL TO A COMPLETE ONE THAT DOES NOT LOGS YOU OUT AFTER SOME TIME 
 
 OPTIONAL
 -------------------------------------------------------------
@@ -28,6 +30,9 @@ i'm reading the whole file i can just check the last line and append the live da
 
 [] IMPROVE TERMINAL UPDATES FOR processer.py WHEN MANAGED AND LAUNCHED BY dataFetcher.py  
 terminal don't show update for it untill completition but it works and logs correctly
+
+[] ADD COMPUTATION FOR ONE MINUTE INDICATORS ON ALL THE TICKERS
+i dont know if i really need this... (how much value add? how much extra computation is required for it? -> not a good tradeoff)
 
 OPTIONAL FOR DEPLOY
 -------------------------------------------------------------
