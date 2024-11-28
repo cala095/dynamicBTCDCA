@@ -102,3 +102,5 @@ fetching_data/history/historyMergers/Merged/timezoneConverted_data/SPX_UTC.csv
 fetching_data/history/historyMergers/Merged/timezoneConverted_data/US02Y_UTC.csv
 fetching_data/history/historyMergers/Merged/timezoneConverted_data/US10Y_UTC.csv
 fetching_data/history/historyMergers/Merged/timezoneConverted_data/VIX_UTC.csv
+fetching_data/history/LIVE PROCESSED/duplicated_records.csv
+vectoring_data/indicators/indicators_data/1 minute/Processed_BTC_with_indicators_m.csv
