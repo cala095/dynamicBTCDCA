@@ -66,7 +66,7 @@ if __name__ == "__main__":
     # Define the input directories for different time frames
     base_input_dir = '../timing/resampled_data'
     base_output_dir = 'indicators_data'
-    
+    tickers = ['BTC', 'DXY', 'GOLD', 'NDQ', 'US02Y', 'US10Y', 'VIX', 'SPX']
     time_frames = [
         ('1 minute', 'm'),
         ('1 hour', 'H'),
@@ -78,17 +78,17 @@ if __name__ == "__main__":
     
     # Ensure the output base directory exists
     os.makedirs(base_output_dir, exist_ok=True)
-    
-    for time_frame, time_name in time_frames:
-        input_dir = os.path.join(base_input_dir, time_frame)
-        output_dir = os.path.join(base_output_dir, time_frame)
-        os.makedirs(output_dir, exist_ok=True)
-        
-        input_file = os.path.join(input_dir, 'Processed_BTC_1' + time_name + '.csv')
-        output_file = os.path.join(output_dir, 'Processed_BTC_with_indicators_1' + time_name + '.csv')
-        
-        if os.path.exists(input_file):
-            print(f"Processing {input_file}...")
-            calculate_indicators(input_file, output_file)
-        else:
-            print(f"File {input_file} not found.")
+    for ticker in tickers:
+        for time_frame, time_name in time_frames:
+            input_dir = os.path.join(base_input_dir, time_frame)
+            output_dir = os.path.join(base_output_dir, time_frame)
+            os.makedirs(output_dir, exist_ok=True)
+            
+            input_file = os.path.join(input_dir, f'Processed_{ticker}_1' + time_name + '.csv')
+            output_file = os.path.join(output_dir, f'Processed_{ticker}_with_indicators_1' + time_name + '.csv')
+            
+            if os.path.exists(input_file):
+                print(f"Processing {input_file}...")
+                calculate_indicators(input_file, output_file)
+            else:
+                print(f"File {input_file} not found.")
