@@ -91,7 +91,7 @@ def resample_data(file_path, output_base_dir):
         
         # Save the resampled data to CSV
         output_file = os.path.join(output_dir, os.path.basename(file_path))
-        resampled.to_csv(output_file.replace('.csv','_' + resample_rule + '.csv'), index=False)
+        resampled.to_csv(output_file.replace('.csv','_1' + resample_rule + '.csv'), index=False)
 
 if __name__ == "__main__":
     # Define the input and output directories
@@ -104,7 +104,7 @@ if __name__ == "__main__":
         exit(1)
     
     # Get the list of CSV files in the input directory
-    csv_files = [f for f in os.listdir(input_dir) if f.endswith('.csv')]
+    csv_files = [f for f in os.listdir(input_dir) if f.endswith('.csv') and "duplicated_records" not in f]
     
     if not csv_files:
         print(f"No CSV files found in {input_dir}.")
