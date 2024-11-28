@@ -85,7 +85,7 @@ if __name__ == "__main__":
         os.makedirs(output_dir, exist_ok=True)
         
         input_file = os.path.join(input_dir, 'Processed_BTC_1' + time_name + '.csv')
-        output_file = os.path.join(output_dir, 'Processed_BTC_with_indicators_' + time_name + '.csv')
+        output_file = os.path.join(output_dir, 'Processed_BTC_with_indicators_1' + time_name + '.csv')
         
         if os.path.exists(input_file):
             print(f"Processing {input_file}...")
