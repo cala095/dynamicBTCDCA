@@ -102,8 +102,20 @@ def copy_btc_data():
             duplicated_records = df[duplicates]
             # Save duplicated records to a CSV file
             duplicated_records.to_csv('duplicated_records.csv', index=False)
-            print(f"Removed {num_duplicates} duplicate entries.")
+            print(f"Found {num_duplicates} duplicate entries")
             print("Duplicated records have been saved to duplicated_records.csv")
+
+            # Group by Timestamp and compare volumes
+            for timestamp, group in duplicated_records.groupby('Timestamp'):
+                # print(f"\nDuplicates for {timestamp}:")
+                # print(group)
+                # Keep row with highest volume
+                max_volume_row = group.loc[group['Volume'].idxmax()]
+            
+                # Remove all rows with this timestamp and add back the one with max volume
+                df = df[df['Timestamp'] != timestamp]
+                df = pd.concat([df, pd.DataFrame([max_volume_row])], ignore_index=True)
+
         else:
             print("No duplicates found.")
         
