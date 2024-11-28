@@ -115,6 +115,7 @@ def copy_btc_data():
                 # Remove all rows with this timestamp and add back the one with max volume
                 df = df[df['Timestamp'] != timestamp]
                 df = pd.concat([df, pd.DataFrame([max_volume_row])], ignore_index=True)
+            print("Duplicated records have been removed.csv")
 
         else:
             print("No duplicates found.")
