@@ -1,6 +1,109 @@
 import pandas as pd
 import os
 import pandas_ta as ta
+import numpy as np
+from numba import njit
+from datetime import datetime
+
+@njit
+def compute_avwap(high, low, volume, k, d, close, useHiLow):
+    n = len(high)
+    hiAVWAP_arr = np.full(n, np.nan)
+    loAVWAP_arr = np.full(n, np.nan)
+    hiAVWAP_next_arr = np.full(n, np.nan)
+    loAVWAP_next_arr = np.full(n, np.nan)
+    
+    hi = high[0]
+    lo = low[0]
+    phi = hi
+    plo = lo
+    state = 0
+    hiAVWAP_s = 0.0
+    loAVWAP_s = 0.0
+    hiAVWAP_v = 0.0
+    loAVWAP_v = 0.0
+    hiAVWAP_s_next = 0.0
+    loAVWAP_s_next = 0.0
+    hiAVWAP_v_next = 0.0
+    loAVWAP_v_next = 0.0
+    lowerBand = 20
+    upperBand = 80
+    lowerReversal = 20
+    upperReversal = 80
+    
+    for idx in range(n):
+        h = high[idx]
+        l = low[idx]
+        vol = volume[idx]
+        k_val = k[idx]
+        d_val = d[idx]
+        c = close[idx]
+
+        # Update phi and plo
+        if d_val < lowerBand or h > phi:
+            phi = h
+            hiAVWAP_s_next = 0.0
+            hiAVWAP_v_next = 0.0
+        if d_val > upperBand or l < plo:
+            plo = l
+            loAVWAP_s_next = 0.0
+            loAVWAP_v_next = 0.0
+
+        # Update hi and lo
+        if h > hi:
+            hi = h
+            hiAVWAP_s = 0.0
+            hiAVWAP_v = 0.0
+        if l < lo:
+            lo = l
+            loAVWAP_s = 0.0
+            loAVWAP_v = 0.0
+
+        # VWAP calculations
+        if useHiLow:
+            vwapHi = h
+            vwapLo = l
+        else:
+            vwapHi = (h + l + c) / 3.0
+            vwapLo = vwapHi
+
+        hiAVWAP_s += vwapHi * vol
+        loAVWAP_s += vwapLo * vol
+        hiAVWAP_v += vol
+        loAVWAP_v += vol
+        hiAVWAP_s_next += vwapHi * vol
+        loAVWAP_s_next += vwapLo * vol
+        hiAVWAP_v_next += vol
+        loAVWAP_v_next += vol
+
+        # Update state
+        if state != -1 and d_val < lowerBand:
+            state = -1
+        elif state != 1 and d_val > upperBand:
+            state = 1
+
+        if hi > phi and state == 1 and k_val < d_val and k_val < lowerReversal:
+            hi = phi
+            hiAVWAP_s = hiAVWAP_s_next
+            hiAVWAP_v = hiAVWAP_v_next
+        if lo < plo and state == -1 and k_val > d_val and k_val > upperReversal:
+            lo = plo
+            loAVWAP_s = loAVWAP_s_next
+            loAVWAP_v = loAVWAP_v_next
+
+        # Calculate AVWAPs
+        hiAVWAP = hiAVWAP_s / hiAVWAP_v if hiAVWAP_v != 0.0 else np.nan
+        loAVWAP = loAVWAP_s / loAVWAP_v if loAVWAP_v != 0.0 else np.nan
+        hiAVWAP_next = hiAVWAP_s_next / hiAVWAP_v_next if hiAVWAP_v_next != 0.0 else np.nan
+        loAVWAP_next = loAVWAP_s_next / loAVWAP_v_next if loAVWAP_v_next != 0.0 else np.nan
+
+        # Store in arrays
+        hiAVWAP_arr[idx] = hiAVWAP
+        loAVWAP_arr[idx] = loAVWAP
+        hiAVWAP_next_arr[idx] = hiAVWAP_next
+        loAVWAP_next_arr[idx] = loAVWAP_next
+        
+    return hiAVWAP_arr, loAVWAP_arr, hiAVWAP_next_arr, loAVWAP_next_arr
 
 def calculate_indicators(file_path, output_file):
     # Read the data
@@ -52,9 +155,92 @@ def calculate_indicators(file_path, output_file):
     # Calculate VWAP (Volume Weighted Average Price)
     if 'Volume' in df.columns and not df['Volume'].isnull().all():
         df['VWAP'] = ta.vwap(high=df['High'], low=df['Low'], close=df['Close'], volume=df['Volume'])
+        
+        # Calculate Stochastic RSI parameters
+        lengthRSI = 64
+        lengthStoch = 48
+        smoothK = 4
+        smoothD = 4
+        if len(df['Close']) >= lengthRSI:  # Check for minimum required data points
+            # Calculate Stochastic RSI
+            stoch_rsi = ta.stochrsi(
+                close=df['Close'],
+                length=lengthStoch,
+                rsi_length=lengthRSI,
+                k=smoothK,
+                d=smoothD
+            )
+
+            # Assign the columns to the DataFrame using the correct column names
+            k_col = stoch_rsi.columns[0]
+            d_col = stoch_rsi.columns[1]
+            
+            # Convert columns to NumPy arrays
+            high = df['High'].values.astype(np.float64)
+            low = df['Low'].values.astype(np.float64)
+            volume = df['Volume'].values.astype(np.float64)
+            k = stoch_rsi[k_col].values.astype(np.float64)
+            d = stoch_rsi[d_col].values.astype(np.float64)
+            close = df['Close'].values.astype(np.float64)
+
+            # Use Numba-optimized function
+            useHiLow = True  # Set based on your preference
+
+            hiAVWAP_arr, loAVWAP_arr, hiAVWAP_next_arr, loAVWAP_next_arr = compute_avwap(
+                high, low, volume, k, d, close, useHiLow
+            )
+
+            # Assign results back to the DataFrame
+            df['hiAVWAP'] = hiAVWAP_arr
+            df['loAVWAP'] = loAVWAP_arr
+            df['hiAVWAP_next'] = hiAVWAP_next_arr
+            df['loAVWAP_next'] = loAVWAP_next_arr
+        
+        else:
+            print(f"Insufficient data for StochRSI{file_path} calculation. Need at least {lengthRSI} records.") 
+
     else:
         print(f"Volume data not available or insufficient for VWAP in {file_path}")
     
+    # Add Volume-Based Indicators
+    # On-Balance Volume (OBV)
+    if 'Volume' in df.columns and not df['Volume'].isnull().all():
+        obv_series = ta.obv(close=df['Close'], volume=df['Volume'])
+        if not obv_series.isnull().all():
+            df['OBV'] = obv_series
+        else:
+            print(f"OBV calculation returned all NaN for {file_path}")
+    else:
+        print(f"Volume data not available for OBV in {file_path}")
+    
+    # Accumulation/Distribution Line (A/D)
+    if required_columns.union({'Volume'}).issubset(df.columns):
+        ad_series = ta.ad(high=df['High'], low=df['Low'], close=df['Close'], volume=df['Volume'])
+        if not ad_series.isnull().all():
+            df['AccDist'] = ad_series
+        else:
+            print(f"Accumulation/Distribution calculation returned all NaN for {file_path}")
+    else:
+        print(f"Required columns for Accumulation/Distribution not found in {file_path}")
+    
+    # Chaikin Money Flow (CMF)
+    cmf_period = 20
+    if len(df) >= cmf_period and required_columns.union({'Volume'}).issubset(df.columns):
+        cmf_series = ta.cmf(high=df['High'], low=df['Low'], close=df['Close'], volume=df['Volume'], length=cmf_period)
+        if not cmf_series.isnull().all():
+            df['CMF'] = cmf_series
+        else:
+            print(f"CMF calculation returned all NaN for {file_path}")
+    else:
+        print(f"Not enough data to compute CMF or required columns missing for {file_path}")
+    
+
+    # Remove columns that are all NaN (indicators that couldn't be calculated)
+    df.dropna(axis=1, how='all', inplace=True)
+    # Remove Timestamp column if present (it's for BTC i want clean data at this point)
+    if 'Timestamp' in df.columns:
+        df.drop(columns=['Timestamp'], inplace=True)
+
     # Reset index to save 'Formatted_Time' as a column
     df.reset_index(inplace=True)
     
