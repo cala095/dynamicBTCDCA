@@ -72,8 +72,9 @@ def resample_data(file_path, output_base_dir):
                 'Price_min': 'Low',
                 'Price_last': 'Close'
             }
-            if 'Volume' in df.columns:
+            if 'Volume' or 'Volume_sum' in df.columns:
                 column_mapping['Volume'] = 'Volume'
+                column_mapping['Volume_sum'] = 'Volume'
             resampled.rename(columns=column_mapping, inplace=True)
         else:
             # For OHLC data, columns are already named correctly
