@@ -39,25 +39,26 @@ def compute_avwap(high, low, volume, k, d, close, useHiLow):
         d_val = d[idx]
         c = close[idx]
 
-        # Update phi and plo
-        if d_val < lowerBand or h > phi:
+        # Update phi and reset hiAVWAP_s_next under specific conditions
+        if d_val < lowerBand and state != 1:
             phi = h
             hiAVWAP_s_next = 0.0
             hiAVWAP_v_next = 0.0
-        if d_val > upperBand or l < plo:
-            plo = l
-            loAVWAP_s_next = 0.0
-            loAVWAP_v_next = 0.0
+        elif h > phi:
+            phi = h  # Update phi without resetting hiAVWAP_s_next
 
-        # Update hi and lo
+        # Update hi and reset hiAVWAP_s when h > hi
         if h > hi:
             hi = h
             hiAVWAP_s = 0.0
             hiAVWAP_v = 0.0
-        if l < lo:
-            lo = l
-            loAVWAP_s = 0.0
-            loAVWAP_v = 0.0
+
+        # Update state
+        prev_state = state
+        if state != -1 and d_val < lowerBand:
+            state = -1
+        elif state != 1 and d_val > upperBand:
+            state = 1
 
         # VWAP calculations
         if useHiLow:
@@ -67,25 +68,40 @@ def compute_avwap(high, low, volume, k, d, close, useHiLow):
             vwapHi = (h + l + c) / 3.0
             vwapLo = vwapHi
 
-        hiAVWAP_s += vwapHi * vol
-        loAVWAP_s += vwapLo * vol
-        hiAVWAP_v += vol
-        loAVWAP_v += vol
-        hiAVWAP_s_next += vwapHi * vol
-        loAVWAP_s_next += vwapLo * vol
-        hiAVWAP_v_next += vol
-        loAVWAP_v_next += vol
+        # Accumulate hiAVWAP_s and hiAVWAP_s_next under different conditions
+        if state == 1:
+            hiAVWAP_s += vwapHi * vol
+            hiAVWAP_v += vol
+        else:
+            hiAVWAP_s_next += vwapHi * vol
+            hiAVWAP_v_next += vol
 
-        # Update state
-        if state != -1 and d_val < lowerBand:
-            state = -1
-        elif state != 1 and d_val > upperBand:
-            state = 1
+        # Similar adjustments for loAVWAP_s and loAVWAP_s_next
+        if l < lo:
+            lo = l
+            loAVWAP_s = 0.0
+            loAVWAP_v = 0.0
 
+        if d_val > upperBand and state != -1:
+            plo = l
+            loAVWAP_s_next = 0.0
+            loAVWAP_v_next = 0.0
+        elif l < plo:
+            plo = l
+
+        if state == -1:
+            loAVWAP_s += vwapLo * vol
+            loAVWAP_v += vol
+        else:
+            loAVWAP_s_next += vwapLo * vol
+            loAVWAP_v_next += vol
+
+        # Conditional assignments
         if hi > phi and state == 1 and k_val < d_val and k_val < lowerReversal:
             hi = phi
             hiAVWAP_s = hiAVWAP_s_next
             hiAVWAP_v = hiAVWAP_v_next
+
         if lo < plo and state == -1 and k_val > d_val and k_val > upperReversal:
             lo = plo
             loAVWAP_s = loAVWAP_s_next
@@ -102,8 +118,9 @@ def compute_avwap(high, low, volume, k, d, close, useHiLow):
         loAVWAP_arr[idx] = loAVWAP
         hiAVWAP_next_arr[idx] = hiAVWAP_next
         loAVWAP_next_arr[idx] = loAVWAP_next
-        
+
     return hiAVWAP_arr, loAVWAP_arr, hiAVWAP_next_arr, loAVWAP_next_arr
+
 
 def calculate_indicators(file_path, output_file):
     # Read the data
