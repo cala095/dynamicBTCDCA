@@ -219,6 +219,25 @@ def calculate_indicators(file_path, output_file):
     else:
         print(f"Volume data not available or insufficient for VWAP in {file_path}")
     
+     # Calculate Rolling Minima, Maxima, Standard Deviation, and Volatility
+    window_size = 100  # Adjust based on your preference
+    if len(df) >= window_size:
+        # Rolling Minima and Maxima
+        df[f'Rolling_Min_{window_size}'] = df['Low'].rolling(window=window_size).min()
+        df[f'Rolling_Max_{window_size}'] = df['High'].rolling(window=window_size).max()
+        
+        # Rolling Standard Deviation
+        df[f'Rolling_STD_{window_size}'] = df['Close'].rolling(window=window_size).std()
+        
+        # Volatility (using logarithmic returns)
+        df['Log_Returns'] = np.log(df['Close'] / df['Close'].shift(1))
+        df[f'Volatility_{window_size}'] = df['Log_Returns'].rolling(window=window_size).std() * np.sqrt(252)  # Adjust annualization factor as needed
+        
+        # Drop 'Log_Returns' column if not needed
+        df.drop(columns=['Log_Returns'], inplace=True)
+    else:
+        print(f"Not enough data to compute rolling calculations for {file_path}")
+
     # Add Volume-Based Indicators
     # On-Balance Volume (OBV)
     if 'Volume' in df.columns and not df['Volume'].isnull().all():
