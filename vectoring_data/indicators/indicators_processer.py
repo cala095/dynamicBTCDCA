@@ -4,6 +4,7 @@ import pandas_ta as ta
 import numpy as np
 from numba import njit
 from datetime import datetime
+import re
 
 @njit
 def compute_avwap(high, low, volume, k, d, close, useHiLow):
@@ -220,7 +221,7 @@ def calculate_indicators(file_path, output_file):
         print(f"Volume data not available or insufficient for VWAP in {file_path}")
     
      # Calculate Rolling Minima, Maxima, Standard Deviation, and Volatility
-    window_size = 100  # Adjust based on your preference
+    window_size = 30  # Adjust based on your preference
     if len(df) >= window_size:
         # Rolling Minima and Maxima
         df[f'Rolling_Min_{window_size}'] = df['Low'].rolling(window=window_size).min()
@@ -229,12 +230,47 @@ def calculate_indicators(file_path, output_file):
         # Rolling Standard Deviation
         df[f'Rolling_STD_{window_size}'] = df['Close'].rolling(window=window_size).std()
         
-        # Volatility (using logarithmic returns)
+         # Volatility (using logarithmic returns)
         df['Log_Returns'] = np.log(df['Close'] / df['Close'].shift(1))
-        df[f'Volatility_{window_size}'] = df['Log_Returns'].rolling(window=window_size).std() * np.sqrt(252)  # Adjust annualization factor as needed
-        
+        # Extract the time frame from the file name
+        # Assuming the file name contains '_1m', '_1H', '_1D', '_1W', '_1M', or '_1Y'
+        time_frame_match = re.search(r'_1([mHDWMY])\.', file_path)
+        if time_frame_match:
+            time_frame_code = time_frame_match.group(1)
+            # Determine periods per year based on the time frame
+            if time_frame_code == 'm':
+                periods_per_year = 525600  # 365 days * 24 hours * 60 minutes
+                vol_window_size = 30
+            elif time_frame_code == 'H':
+                periods_per_year = 8760  # 365 days * 24 hours
+                vol_window_size = 12
+            elif time_frame_code == 'D':
+                periods_per_year = 365  # 365 days
+                vol_window_size = 1
+            elif time_frame_code == 'W':
+                periods_per_year = 52  # 52 weeks
+                vol_window_size = 1
+            elif time_frame_code == 'M':
+                periods_per_year = 12  # 12 months
+                vol_window_size = 1
+            elif time_frame_code == 'Y':
+                periods_per_year = 1  # 1 year
+                vol_window_size = 1
+            else:
+                print(f"Unknown time frame code '{time_frame_code}' in file path '{file_path}'")
+                return
+        else:
+            print(f"Could not determine time frame from file path '{file_path}'")
+            return
+
+        # Calculate the annualization factor
+        annualization_factor = np.sqrt(periods_per_year)
+
+        # Volatility (using logarithmic returns)
+        df[f'Volatility_{vol_window_size}'] = df['Log_Returns'].rolling(window=vol_window_size).std() * annualization_factor
         # Drop 'Log_Returns' column if not needed
         df.drop(columns=['Log_Returns'], inplace=True)
+
     else:
         print(f"Not enough data to compute rolling calculations for {file_path}")
 
