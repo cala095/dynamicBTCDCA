@@ -246,16 +246,16 @@ def calculate_indicators(file_path, output_file):
                 vol_window_size = 12
             elif time_frame_code == 'D':
                 periods_per_year = 365  # 365 days
-                vol_window_size = 1
+                vol_window_size = 2
             elif time_frame_code == 'W':
                 periods_per_year = 52  # 52 weeks
-                vol_window_size = 1
+                vol_window_size = 2
             elif time_frame_code == 'M':
                 periods_per_year = 12  # 12 months
-                vol_window_size = 1
+                vol_window_size = 2
             elif time_frame_code == 'Y':
                 periods_per_year = 1  # 1 year
-                vol_window_size = 1
+                vol_window_size = 2
             else:
                 print(f"Unknown time frame code '{time_frame_code}' in file path '{file_path}'")
                 return
