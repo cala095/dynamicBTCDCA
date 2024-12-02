@@ -145,3 +145,7 @@ vectoring_data/indicators/indicators_data/1 year/Processed_SPX_with_indicators_1
 vectoring_data/indicators/indicators_data/1 year/Processed_US02Y_with_indicators_1Y.csv
 vectoring_data/indicators/indicators_data/1 year/Processed_US10Y_with_indicators_1Y.csv
 vectoring_data/indicators/indicators_data/1 year/Processed_VIX_with_indicators_1Y.csv
+environment_gym/data/merged_data_1D.csv
+environment_gym/data/merged_data_1H.csv
+environment_gym/data/merged_data_1W.csv
+environment_gym/data/merged_data_1Y.csv
