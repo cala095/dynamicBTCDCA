@@ -1,6 +1,8 @@
 import pandas as pd
 import os
 
+
+
 # List of 1H
 files1H = ['../../vectoring_data/indicators/indicators_data/1 hour/Processed_BTC_with_indicators_1H.csv',
          '../../vectoring_data/indicators/indicators_data/1 hour/Processed_DXY_with_indicators_1H.csv',
@@ -42,13 +44,16 @@ files1Y = ['../../vectoring_data/indicators/indicators_data/1 year/Processed_BTC
         '../../vectoring_data/indicators/indicators_data/1 year/Processed_VIX_with_indicators_1Y.csv',
          ]         
 
+files1m = ['../../vectoring_data/indicators/indicators_data/1 minute/Processed_BTC_with_indicators_1m.csv']
+
 def merger(fileList, outputname):
     # List to hold DataFrames
     dfs = []
 
     for file in fileList:
         # Extract prefix from file name
-        prefix = os.path.splitext(os.path.basename(file).split('_')[1])[0] + '_'
+        tokens = os.path.basename(file).split('_')
+        prefix = os.path.splitext(tokens[1] + tokens[4])[0] + '_'
         
         # Read the CSV file
         df = pd.read_csv(file)
@@ -65,6 +70,10 @@ def merger(fileList, outputname):
     # Concatenate DataFrames horizontally
     merged_df = pd.concat(dfs, axis=1)
 
+    # THE NETWORK IS GOING CRAZY WITH NAN
+    # Replace NaN values with zero
+    merged_df.fillna(0, inplace=True)
+
     # # Sort the index if necessary
     merged_df.sort_index(inplace=True)
 
@@ -72,6 +81,7 @@ def merger(fileList, outputname):
     merged_df.to_csv(outputname + ".csv")
 
 if __name__ == "__main__":
+    merger(files1m, "merged_data_1m")
     merger(files1H, "merged_data_1H")
     merger(files1D, "merged_data_1D")
     merger(files1W, "merged_data_1W")
