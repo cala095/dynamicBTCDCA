@@ -15,7 +15,7 @@ class CryptoTradingEnv(gym.Env):
         data_1H,
         data_1D,
         balance_range=(100, 1000000),
-        episode_length_range=(60, 86400),
+        episode_length_range=(60, 43200),
         render_mode=None
     ):
         super(CryptoTradingEnv, self).__init__()
@@ -186,7 +186,7 @@ class CryptoTradingEnv(gym.Env):
     def step(self, action):
 
         # Rescale actions back to original ranges
-        buy_amount = 1 + ((action[0] + 1) * (100 - 1)) / (1 - (-1)) # Mapping from [-1, 1] to [1, 100]
+        buy_amount = ((action[0] + 1) * 100) / 2 # Mapping from [-1, 1] to [1, 100]
         trend_prediction = action[1]  # Already in [-1,1], assuming trend is between -1 and 1
         min_price_prediction = ((action[2] + 1) / 2) * 1e6  # Maps [-1,1] to [0,1e6]
 
@@ -245,36 +245,43 @@ class CryptoTradingEnv(gym.Env):
         self.portfolio['avg_price'] = total_spent / self.portfolio['btc'] if self.portfolio['btc'] > 0 else 0
 
     def _calculate_reward(self, trend_prediction, min_price_prediction, buyed):
-        reward = 0.0
+        
+        reward = 0.0   
+        # Stats
+        current_price = self.data_1m.iloc[self.current_step]['BTC1m_Close']
+        current_min_price = self.data_1m['BTC1m_Close'][self.start_step:self.current_step].min() # current_min_price encountered in the episode
+        prediction_price_accuracy = abs(min_price_prediction - current_min_price) + 1  # How much distance there is beetwen what the model think will be the minimum and what the minimum at that moment is 
+        buy_accuracy = abs(current_price - current_min_price) # Zero is max but breaks the reward model (current price will always be higher or equal to current_min_price) -> 1 is now max 
 
-        if buyed:
-            current_min_price = self.data_1m['BTC1m_Close'][self.start_step:self.current_step].min()
-            prediction_price_difference = abs(min_price_prediction - current_min_price)
-            timing_reward = max(0, 1 - (prediction_price_difference / current_min_price)) * buyed
-            reward += timing_reward
+        if buyed: # If the agent buys we reward him based on quantity buyed and distance from the current min price encountered, at epEnd we will punish him if he didn't buy or buyed at high prices!
+            timing_accuracy_reward = max(0, 1 - (buy_accuracy / (prediction_price_accuracy)) * buyed # If he buyed close to the prediction and the prediction is also good we reward by his conviction!
+            reward += timing_accuracy_reward
         else:
-            current_price = self.data_1m.iloc[self.current_step - 1]['BTC1m_Close']
+            #prediction reward
+            if current_step > 0:
+                reward -= prediction_price_accuracy  # In this way i'm always punishing him, even if he get the right minimum -> forcing him to buy at the right time (punishing inaction) 
+            
+            # btc_avg_price = self.portfolio['avg_price']
+            # if btc_avg_price == 0:
+            #     reward -= self.portfolio['balance']
             btc_avg_price = self.portfolio['avg_price']
-            if btc_avg_price == 0:
-                reward -= self.portfolio['balance']
-            else:
+            if btc_avg_price != 0:
                 market_avg_price = self.data_1m['BTC1m_Close'][self.start_step:self.end_step].mean()
-                price_difference = market_avg_price - btc_avg_price
-                if price_difference >= 0:
-                    reward += price_difference * self.portfolio['btc']
-                else:
-                    reward += price_difference * self.portfolio['btc']
+                price_difference = ((market_avg_price - btc_avg_price)/market_avg_price) * 100  # We avoid big numbers difference in btc by using %
+                reward += price_difference * (100 - self.portfolio['balance']) # This reward is negative when market_avg_price is lower than btc_avg_price -> again reward conviction
 
-            actual_trend = self._get_actual_trend()
-            trend_accuracy = 1 - abs(trend_prediction - actual_trend)
-            reward += trend_accuracy
+            #TODO implement trend prediction reward
+            # actual_trend = self._get_actual_trend()
+            # trend_accuracy = 1 - abs(trend_prediction - actual_trend)
+            # reward += trend_accuracy
 
-            if btc_avg_price > market_avg_price:
-                penalty = btc_avg_price - market_avg_price
-                reward -= penalty * self.portfolio['btc']
-            if self.portfolio['balance'] > 0:
-                uninvested_penalty = self.portfolio['balance'] * 0.1
-                reward -= uninvested_penalty
+            #this is useless now
+            # if btc_avg_price > market_avg_price:
+            #     penalty = btc_avg_price - market_avg_price
+            #     reward -= penalty * self.portfolio['btc']
+            # if self.portfolio['balance'] > 0:
+            #     uninvested_penalty = self.portfolio['balance'] * 0.1
+            #     reward -= uninvested_penalty
 
         return reward
 
@@ -301,9 +308,9 @@ class CryptoTradingEnv(gym.Env):
             'avg_buy_price': self.portfolio['avg_price'],
             'current_price': self.data_1m.iloc[self.current_step - 1]['BTC1m_Close'],
             'profit': self.portfolio['btc'] * self.data_1m.iloc[self.current_step - 1]['BTC1m_Close'] + self.portfolio['balance'] - self.initial_balance,
-            'buy_amount': action[0],
+            'buy_amount': ((action[0] + 1) * 100) / 2, # Maps [-1,1] to [0,100]
             'trend_prediction': action[1],
-            'min_price_prediction': ((action[2] + 1) / 2) * 1e6,  # Maps [-1,1] to [0,1e6],
+            'min_price_prediction': ((action[2] + 1) / 2) * 1e6,  # Maps [-1,1] to [0,1e6]
             'step_reward': reward,
             'episode_reward': self.episode_reward,
             'model_reward': self.model_reward,
