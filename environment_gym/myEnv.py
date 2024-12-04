@@ -254,11 +254,11 @@ class CryptoTradingEnv(gym.Env):
         buy_accuracy = abs(current_price - current_min_price) # Zero is max but breaks the reward model (current price will always be higher or equal to current_min_price) -> 1 is now max 
 
         if buyed: # If the agent buys we reward him based on quantity buyed and distance from the current min price encountered, at epEnd we will punish him if he didn't buy or buyed at high prices!
-            timing_accuracy_reward = max(0, 1 - (buy_accuracy / (prediction_price_accuracy)) * buyed # If he buyed close to the prediction and the prediction is also good we reward by his conviction!
+            timing_accuracy_reward = max(0, 1 - (buy_accuracy / (prediction_price_accuracy))) * buyed # If he buyed close to the prediction and the prediction is also good we reward by his conviction!
             reward += timing_accuracy_reward
         else:
             #prediction reward
-            if current_step > 0:
+            if self.current_step > 0:
                 reward -= prediction_price_accuracy  # In this way i'm always punishing him, even if he get the right minimum -> forcing him to buy at the right time (punishing inaction) 
             
             # btc_avg_price = self.portfolio['avg_price']
