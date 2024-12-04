@@ -11,11 +11,6 @@ import pandas as pd
 import time
 
 def main():
-    # Load your data
-    data_1m = pd.read_csv('data/merged_data_1m.csv')
-    data_1H = pd.read_csv('data/merged_data_1H.csv')
-    data_1D = pd.read_csv('data/merged_data_1D.csv')
-
     # Specify the folder containing the saved model and statistics
     # You can adjust this to point to the folder you want to load
     total_timesteps = 100000  # Should match the one used during training
@@ -24,9 +19,10 @@ def main():
     folder_name = base_folder_name
 
     # If there are multiple versions, adjust to load the correct one
-    while os.path.exists(folder_name) or version > 0:
+    while os.path.exists(base_folder_name) and version > 0:
         version -=1
         folder_name = f"{base_folder_name}_v{version}"
+        print(folder_name)
         if os.path.exists(folder_name):
             break
         else:
@@ -37,6 +33,13 @@ def main():
         return
     else:
         print(f"Loaded {folder_name} + ppo_crypto_trading.py")
+    
+    # Load your data
+    data_1m = pd.read_csv('data/merged_data_1m.csv')
+    data_1H = pd.read_csv('data/merged_data_1H.csv')
+    data_1D = pd.read_csv('data/merged_data_1D.csv')
+
+    
     # Create the testing environment
     test_env = CryptoTradingEnv(data_1m, data_1H, data_1D, render_mode='human')
     test_env = DummyVecEnv([lambda: test_env])
