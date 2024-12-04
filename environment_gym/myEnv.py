@@ -192,13 +192,16 @@ class CryptoTradingEnv(gym.Env):
 
         reward = 0.0  # Initialize reward
 
+        #prediction reward
+        reward += self._calculate_reward(trend_prediction, min_price_prediction, prediction = True)
+
         # Apply constraints on buy amount
         if buy_amount > 0 and self.portfolio['balance'] >= buy_amount:
             buy_amount = max(1.0, min(buy_amount, self.initial_balance / 10)) #TODO punish for going over 1/10
             # Update portfolio based on the action
             self._execute_trade(buy_amount)
             buyed = True
-            reward += self._calculate_reward(trend_prediction, min_price_prediction, buyed)
+            reward += self._calculate_reward(trend_prediction, min_price_prediction, buyed = True)
         else:
             if self.portfolio['balance'] <= buy_amount: # Removing buy_amount if the agent tries to buy when there are insuffiecent founds
                 reward -= buy_amount
@@ -207,19 +210,22 @@ class CryptoTradingEnv(gym.Env):
 
         # Advance the market to the next step
         self.current_step += 1
+        # Just a check to be sure to catch a possible explosion
         if self.current_step >= len(self.data_1m):
             done = True
             obs = None
+            print("elf.current_step >= len(self.data_1m) happened")
+            exit(-1)
         else:
             self.updMarketState()
             done = self.current_step >= self.end_step
 
             # Get the next observation
-            obs = self._next_observation() #if not done else None
+            obs = self._next_observation()
 
         # If episode is done, calculate final reward
         if done:
-            reward += self._calculate_reward(trend_prediction, min_price_prediction, buyed=False)
+            reward += self._calculate_reward(trend_prediction, min_price_prediction, buyed=False, done = done)
 
         info = {}  # Additional info
 
@@ -244,26 +250,30 @@ class CryptoTradingEnv(gym.Env):
         total_spent = (self.portfolio['avg_price'] * (self.portfolio['btc'] - btc_bought)) + total_cost
         self.portfolio['avg_price'] = total_spent / self.portfolio['btc'] if self.portfolio['btc'] > 0 else 0
 
-    def _calculate_reward(self, trend_prediction, min_price_prediction, buyed):
-        
+    def _calculate_reward(self, trend_prediction, min_price_prediction, prediction = False, buyed = False, done = False,): #TODO refactor this
+        # print(trend_prediction, min_price_prediction, prediction, buyed, done)
         reward = 0.0   
         # Stats
         current_price = self.data_1m.iloc[self.current_step]['BTC1m_Close']
         current_min_price = self.data_1m['BTC1m_Close'][self.start_step:self.current_step].min() # current_min_price encountered in the episode
         prediction_price_accuracy = abs(min_price_prediction - current_min_price) + 1  # How much distance there is beetwen what the model think will be the minimum and what the minimum at that moment is 
         buy_accuracy = abs(current_price - current_min_price) # Zero is max but breaks the reward model (current price will always be higher or equal to current_min_price) -> 1 is now max 
+        
+        #prediction reward
+        if prediction:
+            if self.current_step > 0:
+                reward -= min(100, abs(min_price_prediction - current_min_price) / ((min_price_prediction + current_min_price) / 2) * 100)  # In this way i'm always punishing him of the percentage difference -> forcing him to buy at the right time (punishing inaction) 
+                # print("prediction_price_accuracy", prediction_price_accuracy)
 
         if buyed: # If the agent buys we reward him based on quantity buyed and distance from the current min price encountered, at epEnd we will punish him if he didn't buy or buyed at high prices!
-            timing_accuracy_reward = max(0, 1 - (buy_accuracy / (prediction_price_accuracy))) * buyed # If he buyed close to the prediction and the prediction is also good we reward by his conviction!
+            timing_accuracy_reward = max(0, 1 - (buy_accuracy / prediction_price_accuracy)) * buyed # If he buyed close to the prediction and the prediction is also good we reward by his conviction!
             reward += timing_accuracy_reward
-        else:
-            #prediction reward
-            if self.current_step > 0:
-                reward -= prediction_price_accuracy  # In this way i'm always punishing him, even if he get the right minimum -> forcing him to buy at the right time (punishing inaction) 
-            
-            # btc_avg_price = self.portfolio['avg_price']
-            # if btc_avg_price == 0:
-            #     reward -= self.portfolio['balance']
+            # print("timing_accuracy_reward", timing_accuracy_reward)
+
+        # btc_avg_price = self.portfolio['avg_price']
+        # if btc_avg_price == 0:
+        #     reward -= self.portfolio['balance']
+        if done:
             btc_avg_price = self.portfolio['avg_price']
             if btc_avg_price != 0:
                 market_avg_price = self.data_1m['BTC1m_Close'][self.start_step:self.end_step].mean()
