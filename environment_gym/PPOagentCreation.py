@@ -19,12 +19,12 @@ def main():
     data_1D = pd.read_csv('data/merged_data_1D.csv')
 
     # Number of environments to run in parallel
-    num_envs = 8  # Adjust based on your CPU cores
+    num_envs = 1  # Adjust based on your CPU cores
 
     # Create the vectorized environment
     env = SubprocVecEnv([make_env(data_1m, data_1H, data_1D) for _ in range(num_envs)])
 
-    # Wrap the environment with VecNormalize
+    # Wrap the environment with VecNormalize # a good idea to avoid overfitting on normalizing the whole dataset?  i think yes because btc will be the one changing the most 
     env = VecNormalize(env, norm_obs=True, norm_reward=True, clip_obs=10.0)
 
     # Define a more powerful neural network architecture
@@ -33,7 +33,7 @@ def main():
     )
 
     # Specify total timesteps
-    total_timesteps = 1000000  # Adjust as needed
+    total_timesteps = 100000  # Adjust as needed
 
     # Create the PPO model with adjusted hyperparameters
     model = PPO(
@@ -43,7 +43,7 @@ def main():
         device='cpu',
         n_steps=2048,
         batch_size=1024,
-        learning_rate=3e-4,
+        learning_rate =3e-4, #standard 0.0003
         n_epochs=20,
         policy_kwargs=policy_kwargs,
         clip_range=0.2,

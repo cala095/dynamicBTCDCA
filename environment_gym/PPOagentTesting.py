@@ -18,20 +18,25 @@ def main():
 
     # Specify the folder containing the saved model and statistics
     # You can adjust this to point to the folder you want to load
-    total_timesteps = 1000000  # Should match the one used during training
+    total_timesteps = 100000  # Should match the one used during training
     base_folder_name = f"ppo_crypto_trading_{total_timesteps}"
     version = 100
     folder_name = base_folder_name
 
     # If there are multiple versions, adjust to load the correct one
-    while not os.path.exists(folder_name) and version < 100:
-        folder_name = f"{base_folder_name}_v{version}"
+    while os.path.exists(folder_name) or version > 0:
         version -=1
+        folder_name = f"{base_folder_name}_v{version}"
+        if os.path.exists(folder_name):
+            break
+        else:
+            folder_name = base_folder_name
 
-    if not os.path.exists(folder_name):
-        print(f"Model folder {folder_name} does not exist.")
+    if not os.path.exists(base_folder_name):
+        print(f"Model folder {base_folder_name} does not exist.")
         return
-
+    else:
+        print(f"Loaded {folder_name} + ppo_crypto_trading.py")
     # Create the testing environment
     test_env = CryptoTradingEnv(data_1m, data_1H, data_1D, render_mode='human')
     test_env = DummyVecEnv([lambda: test_env])
