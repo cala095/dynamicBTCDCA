@@ -14,15 +14,16 @@ class CryptoTradingEnv(gym.Env):
         data_1m,
         data_1H,
         data_1D,
+        testing = False,
         balance_range=(100, 1000000),
         episode_length_range=(60, 1000),
         render_mode=None
     ):
         super(CryptoTradingEnv, self).__init__()
 
-        # Store the render mode
+        # Store the render mode + testing for printing the logs
         self.render_mode = render_mode
-
+        self.testing = testing
         # Store data for different time frames
         self.data_1m = data_1m  # DataFrame with 1-minute data
         self.data_1H = data_1H  # DataFrame with 1-hour data
@@ -69,7 +70,7 @@ class CryptoTradingEnv(gym.Env):
         )
 
         # For monitoring
-        self.monitor_data = []
+        self.monitor_data = None
 
     # Initialize timeframes + current_step on each one
     def updMarketState(self):
@@ -124,8 +125,9 @@ class CryptoTradingEnv(gym.Env):
         # Initialize portfolio
         self.portfolio = {'balance': self.initial_balance, 'btc': 0, 'avg_price': 0}
 
-        # Reset monitor data
-        self.monitor_data = []
+        # Reset monitor data for testing only
+        if self.testing:
+            self.monitor_data = self.get_monitor_data() #just because like this we don't lose it
 
         return self._next_observation()
 
@@ -196,13 +198,15 @@ class CryptoTradingEnv(gym.Env):
         reward += self._calculate_reward(trend_prediction, min_price_prediction, prediction = True)
 
         # Apply constraints on buy amount
-        if buy_amount > 0 and self.portfolio['balance'] >= buy_amount:
-            buy_amount = max(1.0, min(buy_amount, self.initial_balance / 10)) #TODO punish for going over 1/10
+        if buy_amount >= 1 and self.portfolio['balance'] >= buy_amount:
+            buy_amount = max(1.0, min(buy_amount, self.initial_balance / 10)) 
+            if buy_amount > self.initial_balance / 10: #punish for going over 1/10
+                reward -= buy_amount
             # Update portfolio based on the action
             self._execute_trade(buy_amount)
             reward += self._calculate_reward(trend_prediction, min_price_prediction, bought = buy_amount)
         else:
-            if self.portfolio['balance'] <= buy_amount: # Removing buy_amount if the agent tries to buy when there are insuffiecent founds
+            if (self.portfolio['balance'] <= buy_amount or buy_amount < 1) and buy_amount != 0: # Removing buy_amount if the agent tries to buy when there are insuffiecent founds or buy less than 1%
                 reward -= buy_amount
             buy_amount = 0
 
@@ -255,7 +259,8 @@ class CryptoTradingEnv(gym.Env):
         current_price = self.data_1m.iloc[self.current_step]['BTC1m_Close']
         current_min_price = self.data_1m['BTC1m_Close'][self.start_step:self.current_step].min() # current_min_price encountered in the episode
         if np.isnan(current_min_price): current_min_price = current_price
-        prediction_price_accuracy = min(100, ((abs(min_price_prediction - current_min_price) / current_min_price)* 100) + 0.001  )   # How much ptg distance there is beetwen what the model think will be the minimum and what the minimum at that moment is (0 breaks so max is 0.001)
+        ## How much ptg distance there is beetwen what the model think will be the minimum and what the minimum at that moment is (0 breaks so max is 0.001)
+        prediction_price_accuracy = min(10000, ((abs(min_price_prediction - current_min_price) / current_min_price)* 100) + 0.00001  )   #setting 10000 as min so that the model can catch it in the reward -> suppose min_price_pred is 500 000 and price is 1000 ...
         buy_accuracy = abs(current_price - current_min_price) # Zero is max (current price will always be higher or equal to current_min_price)
         timing_accuracy_reward = min(100, (1 / (buy_accuracy + prediction_price_accuracy) * bought))  # If he bought close to the prediction and the prediction is also good we reward by his conviction!
         # print("current_step: ", self.current_step)
@@ -268,7 +273,9 @@ class CryptoTradingEnv(gym.Env):
         #prediction reward
         if prediction and min_price_prediction != 0:
             if self.current_step > 0:
-                reward += (0.001/prediction_price_accuracy) - (self.monitor_progress*self.portfolio['balance']) # Rewards him if he gets closer ALSO punish if the agent gets closer to episod ends without buying
+                reward += (0.00001/prediction_price_accuracy) - (self.monitor_progress*self.portfolio['balance']*0.01) # Rewards him if he gets closer ALSO punish if the agent gets closer to episod ends without buying
+        elif prediction and min_price_prediction == 0: # The model was setting min_price_prediction at zero to avoid the progress penality
+            reward -= (self.monitor_progress*self.portfolio['balance'])
                 # print("prediction_price_accuracy", prediction_price_accuracy)
         
         # If the agent buys we reward him based on quantity bought and distance from the current min price encountered, at epEnd we will punish him if he didn't buy or bought at high prices!
@@ -286,6 +293,7 @@ class CryptoTradingEnv(gym.Env):
                 price_difference = ((market_avg_price - btc_avg_price)/market_avg_price) * 100  # We avoid big numbers difference in btc by using %
                 price_difference = max(-100,price_difference) if price_difference < 0 else min(100, price_difference)
                 reward += price_difference - self.portfolio['balance'] # This reward is negative when market_avg_price is lower than btc_avg_price -> again reward conviction:
+                # print("price_difference_ptg", price_difference)
 
             #TODO implement trend prediction reward
             # actual_trend = self._get_actual_trend()
@@ -311,11 +319,11 @@ class CryptoTradingEnv(gym.Env):
         return actual_trend
 
     def monitor(self, action, reward, done):
-        if done:
-            self.episode_reward = 0
-        else:
-            self.episode_reward += reward
-            self.model_reward += reward
+        if self.testing is not True:
+            return
+
+        self.episode_reward += reward
+        self.model_reward += reward
         # Record the relevant data
         data = {
             'step': self.current_step,
@@ -323,6 +331,7 @@ class CryptoTradingEnv(gym.Env):
             'balance': self.portfolio['balance'],
             'btc_holdings': self.portfolio['btc'],
             'avg_buy_price': self.portfolio['avg_price'],
+            'market_avg_price': self.data_1m['BTC1m_Close'][self.start_step:self.end_step].mean(),
             'current_price': self.data_1m.iloc[self.current_step - 1]['BTC1m_Close'],
             'profit': self.portfolio['btc'] * self.data_1m.iloc[self.current_step - 1]['BTC1m_Close'] + self.portfolio['balance'] - self.initial_balance,
             'buy_amount': ((action[0] + 1) * 100) / 2, # Maps [-1,1] to [0,100]
@@ -331,24 +340,30 @@ class CryptoTradingEnv(gym.Env):
             'step_reward': reward,
             'episode_reward': self.episode_reward,
             'model_reward': self.model_reward,
-            'progress': self.monitor_progress
+            'progress': self.monitor_progress,
+            'done': done
         }
         self.monitor_data.append(data)
 
-    def render(self, mode='human'):
-        # Render the environment to the screen (optional)
-        current_price = self.data_1m.iloc[self.current_step - 1]['BTC1m_Close']
-        profit = self.portfolio['btc'] * current_price + self.portfolio['balance'] - self.initial_balance
-        print(f'Step: {self.current_step}')
-        print(f'Balance: ${self.portfolio["balance"]:.2f}')
-        print(f'BTC Holdings: {self.portfolio["btc"]:.6f} BTC')
-        print(f'Avg Buy Price: ${self.portfolio["avg_price"]:.2f}')
-        print(f'Current Price: ${current_price:.2f}')
-        print(f'Profit: ${profit:.2f}')
+    # def render(self, mode='human'):
+    #     # Render the environment to the screen (optional)
+    #     current_price = self.data_1m.iloc[self.current_step - 1]['BTC1m_Close']
+    #     profit = self.portfolio['btc'] * current_price + self.portfolio['balance'] - self.initial_balance
+    #     print(f'Step: {self.current_step}')
+    #     print(f'Balance: ${self.portfolio["balance"]:.2f}')
+    #     print(f'BTC Holdings: {self.portfolio["btc"]:.6f} BTC')
+    #     print(f'Avg Buy Price: ${self.portfolio["avg_price"]:.2f}')
+    #     print(f'Current Price: ${current_price:.2f}')
+    #     print(f'Profit: ${profit:.2f}')
 
     def close(self):
         # Clean up (optional)
         pass
 
     def get_monitor_data(self):
+        if self.testing is False: return # to avoid useless istruction during training
+
+        if self.monitor_data is None: # inits the dataframe -> otherwise in reset we can broke this for not losing the done state
+            return []
+
         return pd.DataFrame(self.monitor_data).tail(1)
