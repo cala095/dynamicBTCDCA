@@ -66,7 +66,7 @@ def main():
     data_1D = pd.read_csv('data/merged_data_1D.csv')
 
     # Create the testing environment
-    test_env = CryptoTradingEnv(data_1m, data_1H, data_1D, render_mode='human')
+    test_env = CryptoTradingEnv(data_1m, data_1H, data_1D, testing = True, render_mode='human')
     test_env = DummyVecEnv([lambda: test_env])
 
     # Load the saved VecNormalize statistics
@@ -109,6 +109,7 @@ def main():
     fh.close()
     logger.removeHandler(ch)
     ch.close()
+    print("model testing terminated")
 
 if __name__ == "__main__":
     main()
