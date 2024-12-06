@@ -260,7 +260,7 @@ class CryptoTradingEnv(gym.Env):
         current_min_price = self.data_1m['BTC1m_Close'][self.start_step:self.current_step].min() # current_min_price encountered in the episode
         if np.isnan(current_min_price): current_min_price = current_price
         ## How much ptg distance there is beetwen what the model think will be the minimum and what the minimum at that moment is (0 breaks so max is 0.001)
-        prediction_price_accuracy = min(10000, ((abs(min_price_prediction - current_min_price) / current_min_price)* 100) + 0.00001  )   #setting 10000 as min so that the model can catch it in the reward -> suppose min_price_pred is 500 000 and price is 1000 ...
+        prediction_price_accuracy = min(100000, ((abs(min_price_prediction - current_min_price) / current_min_price)* 100) + 0.000001  )   #setting 10000 as min so that the model can catch it in the reward -> suppose min_price_pred is 500 000 and price is 1000 ...
         buy_accuracy = abs(current_price - current_min_price) # Zero is max (current price will always be higher or equal to current_min_price)
         timing_accuracy_reward = min(100, (1 / (buy_accuracy + prediction_price_accuracy) * bought))  # If he bought close to the prediction and the prediction is also good we reward by his conviction!
         # print("current_step: ", self.current_step)
@@ -273,7 +273,7 @@ class CryptoTradingEnv(gym.Env):
         #prediction reward
         if prediction and min_price_prediction != 0:
             if self.current_step > 0:
-                reward += (0.00001/prediction_price_accuracy) - (self.monitor_progress*self.portfolio['balance']*0.01) # Rewards him if he gets closer ALSO punish if the agent gets closer to episod ends without buying
+                reward += (0.000001/prediction_price_accuracy) - (self.monitor_progress*self.portfolio['balance']*0.01) # Rewards him if he gets closer ALSO punish if the agent gets closer to episod ends without buying
         elif prediction and min_price_prediction == 0: # The model was setting min_price_prediction at zero to avoid the progress penality
             reward -= (self.monitor_progress*self.portfolio['balance'])
                 # print("prediction_price_accuracy", prediction_price_accuracy)
@@ -343,7 +343,8 @@ class CryptoTradingEnv(gym.Env):
             'progress': self.monitor_progress,
             'done': done
         }
-        self.monitor_data.append(data)
+        # self.monitor_data.append(data)
+        self.monitor_data.loc[0] = data
 
     # def render(self, mode='human'):
     #     # Render the environment to the screen (optional)
@@ -364,6 +365,11 @@ class CryptoTradingEnv(gym.Env):
         if self.testing is False: return # to avoid useless istruction during training
 
         if self.monitor_data is None: # inits the dataframe -> otherwise in reset we can broke this for not losing the done state
-            return []
+            return pd.DataFrame(columns=[
+                                            'step', 'datetime', 'balance', 'btc_holdings', 'avg_buy_price',
+                                            'market_avg_price', 'current_price', 'profit', 'buy_amount',
+                                            'trend_prediction', 'min_price_prediction', 'step_reward',
+                                            'episode_reward', 'model_reward', 'progress', 'done'
+                                        ]) #[]
 
         return pd.DataFrame(self.monitor_data).tail(1)
