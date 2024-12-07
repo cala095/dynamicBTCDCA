@@ -14,7 +14,7 @@ import logging
 def main():
     # Specify the folder containing the saved model and statistics
     total_timesteps = 20000000  # Should match the one used during training
-    base_folder_name = f"ppo_crypto_trading_{total_timesteps}"
+    base_folder_name = f"ppo_crypto_trading_20000000_v1_continued_10000000"
     version = 100
     folder_name = base_folder_name
 

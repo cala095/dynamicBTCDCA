@@ -25,7 +25,7 @@ def main():
     env = SubprocVecEnv([make_env(data_1m, data_1H, data_1D) for _ in range(num_envs)])
 
     # Wrap the environment with VecNormalize # a good idea to avoid overfitting on normalizing the whole dataset?  i think yes because btc will be the one changing the most 
-    env = VecNormalize(env, norm_obs=True, norm_reward=True, clip_obs=1.0) #TODO maybe implement positive rewards? instead of negative ones?
+    env = VecNormalize(env, norm_obs=True, norm_reward=True, clip_obs=1.0) 
 
     # Define a more powerful neural network architecture
     policy_kwargs = dict(

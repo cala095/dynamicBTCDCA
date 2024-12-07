@@ -23,27 +23,33 @@ def make_env(data_1m, data_1H, data_1D, testing=False):
 
 def main():
     # Additional training timesteps
-    additional_timesteps = 200_000  # Adjust as needed
-    original_timestep = 30_000      # Adjust based on your existing model's folder name
-
-    # Base folder name for loading the model and VecNormalize stats
-    base_folder_name = f"ppo_crypto_trading_{original_timestep}"
-
-    # Find the latest version of the saved model (incrementing vX until no folder is found)
+    original_timestep = 30_000_000      # Adjust based on your existing model's folder name
+    additional_timesteps = 10_000_000  # Adjust as needed
+    continued = True
+    continuedFrom = 20_000_000
     version = 1
-    folder_name = base_folder_name
-    last_existing_folder = None
+    
+    if continued:
+        folder_name = f"ppo_crypto_trading_{original_timestep}_v{version}_continued_{continuedFrom}_v{version}"
+    # Base folder name for loading the model and VecNormalize stats
+    else:
+        base_folder_name = f"ppo_crypto_trading_{original_timestep}"
 
-    while os.path.exists(folder_name):
-        last_existing_folder = folder_name
-        folder_name = f"{base_folder_name}_v{version}"
-        version += 1
+        # Find the latest version of the saved model (incrementing vX until no folder is found)
+        version = 1
+        folder_name = base_folder_name
+        last_existing_folder = None
 
-    # Use the last existing folder where the model was found
-    folder_name = last_existing_folder
-    if folder_name is None:
-        print(f"No existing model folder found for {base_folder_name}.")
-        return
+        while os.path.exists(folder_name):
+            last_existing_folder = folder_name
+            folder_name = f"{base_folder_name}_v{version}"
+            version += 1
+
+        # Use the last existing folder where the model was found
+        folder_name = last_existing_folder
+        if folder_name is None:
+            print(f"No existing model folder found for {base_folder_name}.")
+            return
 
     print(f"Loading model and VecNormalize statistics from folder: {folder_name}")
 
@@ -58,7 +64,7 @@ def main():
     data_1D = pd.read_csv('data/merged_data_1D.csv')
 
     # Number of parallel environments for training
-    num_envs = 12  # Adjust based on CPU cores
+    num_envs = 8  # Adjust based on CPU cores
 
     # Create the training environment
     env = SubprocVecEnv([make_env(data_1m, data_1H, data_1D) for _ in range(num_envs)])
@@ -108,15 +114,15 @@ def main():
     print(f"Starting additional training for {additional_timesteps} timesteps...")
     model.learn(total_timesteps=additional_timesteps)#, callback=eval_callback)
     print("Additional training completed.")
-
+    
     # Versioning for saving the updated model and normalization stats
-    new_base_folder_name = f"ppo_crypto_trading_{original_timestep + additional_timesteps}_{version}_continued_{original_timestep}"
     new_version = 1
+    new_base_folder_name = f"ppo_crypto_trading_{original_timestep + additional_timesteps}_v{new_version}_continued_{original_timestep}_v{version}"
     new_folder_name = new_base_folder_name
 
     while os.path.exists(new_folder_name):
-        new_folder_name = f"{new_base_folder_name}_v{new_version}"
         new_version += 1
+        new_folder_name = f"ppo_crypto_trading_{original_timestep + additional_timesteps}_v{new_version}_continued_{original_timestep}_v{version}"
 
     os.makedirs(new_folder_name, exist_ok=True)
 
