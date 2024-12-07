@@ -1,0 +1,210 @@
+ideas.txt
+fetching_data/transformed_data.csv
+fetching_data/PriceData/btcusd_1-min_data.csv
+fetching_data/Yahoo Finance+FRED.py
+fetching_data/live/gmail_credential.json
+fetching_data/live/token.json
+fetching_data/live/PriceData/btcusd_1-min_data.csv
+fetching_data/live/PriceData/US02Y_data.txt
+fetching_data/live/PriceData/US02Y_state.json
+fetching_data/live/PriceData/US10Y_data.txt
+fetching_data/live/PriceData/US10Y_state.json
+fetching_data/live/PriceData/VIX_data.txt
+fetching_data/live/PriceData/VIX_state.json
+fetching_data/live/PriceData/GOLD_data.txt
+fetching_data/live/PriceData/GOLD_state.json
+fetching_data/live/PriceData/NDQ_data.txt
+fetching_data/live/PriceData/NDQ_state.json
+fetching_data/live/PriceData/SPX_data.txt
+fetching_data/live/PriceData/SPX_state.json
+fetching_data/live/PriceData/DXY_data.csv
+fetching_data/live/PriceData/DXY_state.json
+fetching_data/live/PriceData/GOLD_data.csv
+fetching_data/live/PriceData/NDQ_data.csv
+fetching_data/live/PriceData/SPX_data.csv
+fetching_data/live/PriceData/US02Y_data.csv
+fetching_data/live/PriceData/US10Y_data.csv
+fetching_data/live/PriceData/VIX_data.csv
+fetching_data/live/PriceData.rar
+fetching_data/history/barchart/shy (1 - 3 years maturity U.S. T.NOTE) 1m
+fetching_data/history/barchart/tnx 1m
+fetching_data/history/barchart/U.S. 2y yield 1d
+fetching_data/history/barchart/estimated_2yr_yield_1min_duration_method_adjusted.csv
+fetching_data/history/barchart/barchart.rar
+fetching_data/history/barchart/tnx_filled_data.csv
+fetching_data/history/backtest-market/dlarind-1m_bk.zip
+fetching_data/history/backtest-market/gc-1m_bk.zip
+fetching_data/history/backtest-market/nq-1m_bk-1.zip
+fetching_data/history/backtest-market/spx-1m-1.zip
+fetching_data/history/backtest-market/vix-1m_bk-1.zip
+fetching_data/history/backtest-market/dlarind-1m_bk/dlarind-1m_bk.csv
+fetching_data/history/backtest-market/gc-1m_bk/gc-1m_bk.csv
+fetching_data/history/backtest-market/nq-1m_bk-1/nq-1m_bk.csv
+fetching_data/history/backtest-market/spx-1m-1/spx-1m.csv
+fetching_data/history/backtest-market/vix-1m_bk-1/vix-1m_bk.csv
+fetching_data/live/apikey.txt
+fetching_data/history/merged_data.csv
+fetching_data/history/duplicate_datetimes.csv
+fetching_data/history/historyMergers/duplicate_datetimes_DXY.csv
+fetching_data/history/historyMergers/duplicate_datetimes_GOLD.csv
+fetching_data/history/historyMergers/Merged/Merged_DXY.csv
+fetching_data/history/historyMergers/Merged/Merged_GOLD.csv
+fetching_data/history/historyMergers/duplicate_datetimes_NDQ.csv
+fetching_data/history/historyMergers/duplicate_datetimes_SPX.csv
+fetching_data/history/historyMergers/Merged/Merged_NDQ.csv
+fetching_data/history/historyMergers/Merged/Merged_SPX.csv
+fetching_data/history/historyMergers/duplicate_datetimes_VIX.csv
+fetching_data/history/historyMergers/Merged/Merged_VIX.csv
+fetching_data/history/barchart/merged + filled data/estimated_2yr_yield_1min_duration_method_adjusted.csv
+fetching_data/history/barchart/merged + filled data/tnx_filled_data.csv
+fetching_data/history/historyMergers/duplicate_datetimes_US02Y.csv
+fetching_data/history/historyMergers/duplicate_datetimes_US10Y.csv
+fetching_data/history/historyMergers/Merged/Merged_US02Y.csv
+fetching_data/history/historyMergers/Merged/Merged_US10Y.csv
+backup/
+fetching_data/logging/criptocompare_BTC_1m.log
+fetching_data/logging/Processer.log
+fetching_data/logging/TradingViewEmail_1min_tickers.log
+vectoring_data/timing/1 minute/
+fetching_data/live/PriceData/
+fetching_data/history/LIVE PROCESSED/Processed_BTC.csv
+fetching_data/history/LIVE PROCESSED/Processed_DXY.csv
+fetching_data/history/LIVE PROCESSED/Processed_GOLD.csv
+fetching_data/history/LIVE PROCESSED/Processed_NDQ.csv
+fetching_data/history/LIVE PROCESSED/Processed_SPX.csv
+fetching_data/history/LIVE PROCESSED/Processed_US02Y.csv
+fetching_data/history/LIVE PROCESSED/Processed_US10Y.csv
+fetching_data/history/LIVE PROCESSED/Processed_VIX.csv
+vectoring_data/timing/1 day/Processed_BTC.csv
+vectoring_data/timing/1 hour/Processed_BTC.csv
+vectoring_data/timing/1 month/Processed_BTC.csv
+vectoring_data/timing/1 week/Processed_BTC.csv
+vectoring_data/timing/1 year/Processed_BTC.csv
+fetching_data/logging/TradingViewEmail_1min_tickers.log.1
+vectoring_data/timing/resampled_data/
+vectoring_data/timing/duplicate_reports/1 minute/Processed_BTC_1m_duplicates.csv
+fetching_data/history/backtest-market/btcusd-1m.zip
+fetching_data/history/LIVE PROCESSED/BTC_missing_minutes.csv
+fetching_data/history/backtest-market/btcusd-1m/btcusd-1m.csv
+fetching_data/history/backtest-market/btcusd-1m/output.csv
+fetching_data/history/backtest-market/btcusd-1m/BTC_complementary_adjusted_output.csv
+fetching_data/history/backtest-market/btcusd-1m/BTC_timezone_adjusted_from_ITC_to_UTC(ready_For_MERGE).csv
+fetching_data/history/backtest-market/btcusd-1m/merged_minutes_firstMerge.log
+fetching_data/history/backtest-market/btcusd-1m/merged_minutes.log
+fetching_data/history/backtest-market/btcusd-1m/merged_output.csv
+fetching_data/history/backtest-market/btcusd-1m/Processed_BTC_mod_for_merge.csv
+fetching_data/history/backtest-market/btcusd-1m/unix_merged_output.csv
+fetching_data/history/LIVE PROCESSED.rar
+fetching_data/history/historyMergers/Merged/timezoneConverted_data/DXY_UTC.csv
+fetching_data/history/historyMergers/Merged/timezoneConverted_data/GOLD_UTC.csv
+fetching_data/history/historyMergers/Merged/timezoneConverted_data/NDQ_UTC.csv
+fetching_data/history/historyMergers/Merged/timezoneConverted_data/SPX_UTC.csv
+fetching_data/history/historyMergers/Merged/timezoneConverted_data/US02Y_UTC.csv
+fetching_data/history/historyMergers/Merged/timezoneConverted_data/US10Y_UTC.csv
+fetching_data/history/historyMergers/Merged/timezoneConverted_data/VIX_UTC.csv
+fetching_data/history/LIVE PROCESSED/duplicated_records.csv
+vectoring_data/indicators/indicators_data/1 minute/Processed_BTC_with_indicators_m.csv
+vectoring_data/indicators/indicators_data/1 day/Processed_BTC_with_indicators_1D.csv
+vectoring_data/indicators/indicators_data/1 day/Processed_DXY_with_indicators_1D.csv
+vectoring_data/indicators/indicators_data/1 day/Processed_GOLD_with_indicators_1D.csv
+vectoring_data/indicators/indicators_data/1 day/Processed_NDQ_with_indicators_1D.csv
+vectoring_data/indicators/indicators_data/1 day/Processed_SPX_with_indicators_1D.csv
+vectoring_data/indicators/indicators_data/1 day/Processed_US02Y_with_indicators_1D.csv
+vectoring_data/indicators/indicators_data/1 day/Processed_US10Y_with_indicators_1D.csv
+vectoring_data/indicators/indicators_data/1 day/Processed_VIX_with_indicators_1D.csv
+vectoring_data/indicators/indicators_data/1 hour/Processed_BTC_with_indicators_1H.csv
+vectoring_data/indicators/indicators_data/1 hour/Processed_DXY_with_indicators_1H.csv
+vectoring_data/indicators/indicators_data/1 hour/Processed_GOLD_with_indicators_1H.csv
+vectoring_data/indicators/indicators_data/1 hour/Processed_NDQ_with_indicators_1H.csv
+vectoring_data/indicators/indicators_data/1 hour/Processed_SPX_with_indicators_1H.csv
+vectoring_data/indicators/indicators_data/1 hour/Processed_US02Y_with_indicators_1H.csv
+vectoring_data/indicators/indicators_data/1 hour/Processed_US10Y_with_indicators_1H.csv
+vectoring_data/indicators/indicators_data/1 hour/Processed_VIX_with_indicators_1H.csv
+vectoring_data/indicators/indicators_data/1 minute/Processed_BTC_with_indicators_1m.csv
+vectoring_data/indicators/indicators_data/1 month/Processed_BTC_with_indicators_1M.csv
+vectoring_data/indicators/indicators_data/1 month/Processed_DXY_with_indicators_1M.csv
+vectoring_data/indicators/indicators_data/1 month/Processed_GOLD_with_indicators_1M.csv
+vectoring_data/indicators/indicators_data/1 month/Processed_NDQ_with_indicators_1M.csv
+vectoring_data/indicators/indicators_data/1 month/Processed_SPX_with_indicators_1M.csv
+vectoring_data/indicators/indicators_data/1 month/Processed_US02Y_with_indicators_1M.csv
+vectoring_data/indicators/indicators_data/1 month/Processed_US10Y_with_indicators_1M.csv
+vectoring_data/indicators/indicators_data/1 month/Processed_VIX_with_indicators_1M.csv
+vectoring_data/indicators/indicators_data/1 week/Processed_BTC_with_indicators_1W.csv
+vectoring_data/indicators/indicators_data/1 week/Processed_DXY_with_indicators_1W.csv
+vectoring_data/indicators/indicators_data/1 week/Processed_GOLD_with_indicators_1W.csv
+vectoring_data/indicators/indicators_data/1 week/Processed_NDQ_with_indicators_1W.csv
+vectoring_data/indicators/indicators_data/1 week/Processed_SPX_with_indicators_1W.csv
+vectoring_data/indicators/indicators_data/1 week/Processed_US02Y_with_indicators_1W.csv
+vectoring_data/indicators/indicators_data/1 week/Processed_US10Y_with_indicators_1W.csv
+vectoring_data/indicators/indicators_data/1 week/Processed_VIX_with_indicators_1W.csv
+vectoring_data/indicators/indicators_data/1 year/Processed_BTC_with_indicators_1Y.csv
+vectoring_data/indicators/indicators_data/1 year/Processed_DXY_with_indicators_1Y.csv
+vectoring_data/indicators/indicators_data/1 year/Processed_GOLD_with_indicators_1Y.csv
+vectoring_data/indicators/indicators_data/1 year/Processed_NDQ_with_indicators_1Y.csv
+vectoring_data/indicators/indicators_data/1 year/Processed_SPX_with_indicators_1Y.csv
+vectoring_data/indicators/indicators_data/1 year/Processed_US02Y_with_indicators_1Y.csv
+vectoring_data/indicators/indicators_data/1 year/Processed_US10Y_with_indicators_1Y.csv
+vectoring_data/indicators/indicators_data/1 year/Processed_VIX_with_indicators_1Y.csv
+environment_gym/data/merged_data_1D.csv
+environment_gym/data/merged_data_1H.csv
+environment_gym/data/merged_data_1W.csv
+environment_gym/data/merged_data_1Y.csv
+environment_gym/data/merged_data_1m.csv
+fetching_data/logging/TradingViewEmail_1min_tickers.log.2
+environment_gym/vec_normalize.pkl
+environment_gym/__pycache__/myEnv.cpython-311.pyc
+environment_gym/ppo_crypto_trading_100000/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_100000/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_1000000/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_1000000/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_1000000_v1/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_1000000_v1/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_1000000_v2/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_1000000_v2/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_1000000_v3/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_1000000_v3/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_1000000_v4/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_1000000_v4/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_100000_v1/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_100000_v1/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_100000_v2/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_100000_v2/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_100000_v3/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_100000_v3/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_100000_v4/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_100000_v4/vec_normalize.pkl
+environment_gym/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_20000000/ppo_crypto_trading_output.log
+environment_gym/ppo_crypto_trading_20000000/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_20000000/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_30000/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_30000/vec_normalize.pkl
+environment_gym/myEnv copy.py
+environment_gym/ppo_crypto_trading_100000_2_continued_30000/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_100000_2_continued_30000/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_100000_2_continued_30000_v1/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_100000_2_continued_30000_v1/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_100000_continued_30000/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_100000_continued_30000/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_100000_continued_30000_v1/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_100000_continued_30000_v1/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_130000_2_continued_30000/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_130000_2_continued_30000/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_130000_2_continued_30000_v1/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_130000_2_continued_30000_v1/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_20000000_v1/ppo_crypto_trading_output.log
+environment_gym/ppo_crypto_trading_20000000_v1/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_20000000_v1/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_20000000_v1_continued_10000000/ppo_crypto_trading_output.log
+environment_gym/ppo_crypto_trading_20000000_v1_continued_10000000/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_20000000_v1_continued_10000000/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_30000/ppo_crypto_trading_eval_100000.log
+environment_gym/ppo_crypto_trading_30000/evalfrq_8000_eval_130000.log/evaluations.npz
+environment_gym/ppo_crypto_trading_30000/evalfrq_8000_eval_50000.log/readEval.py
+environment_gym/ppo_crypto_trading_50000_2_continued_30000/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_50000_2_continued_30000/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_50000_2_continued_30000_v1/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_50000_2_continued_30000_v1/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_30000000_v1_continued_20000000_v1/ppo_crypto_trading_output.log
+environment_gym/ppo_crypto_trading_30000000_v1_continued_20000000_v1/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_30000000_v1_continued_20000000_v1/vec_normalize.pkl

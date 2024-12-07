@@ -1,0 +1,3 @@
+MUST HAVE TO MAKE IT WORK:
+ - data in fetching_data\live\PriceData (BTC 1m historic is a MUST because the script is currently updating the last time read)
+ - data in fetching_data\history\LIVE PROCESSED (the historic merged with live)
