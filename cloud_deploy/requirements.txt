@@ -1,0 +1,6 @@
+google cloud platform
+
+requirements os linux 12 bookworm
+sudo apt install git
+
+python packages
