@@ -23,7 +23,7 @@ file_destinations = {
     "US10Y_data.csv": "../fetching_data/live/PriceData",
     "VIX_data.csv": "../fetching_data/live/PriceData",
     "apikey.txt": "../fetching_data/live",
-    "gmail_credentials.json": "../fetching_data/live",
+    "gmail_credential.json": "../fetching_data/live",
     "token.json": "../fetching_data/live"
 }
 

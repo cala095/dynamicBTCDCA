@@ -28,7 +28,7 @@ file_paths = {
     "US10Y_data.csv": "../fetching_data/live/PriceData",
     "VIX_data.csv": "../fetching_data/live/PriceData",
     "apikey.txt": "../fetching_data/live",
-    "gmail_credentials.json": "gmail credentials",
+    "gmail_credential.json": "gmail credentials",
     "token.json": "gmail credentials"
 }
 
