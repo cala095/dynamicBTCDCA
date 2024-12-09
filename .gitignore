@@ -213,3 +213,22 @@ environment_gym/ppo_crypto_trading_40000000_v1_continued_30000000_v1/vec_normali
 environment_gym/ppo_crypto_trading_40000000_v1_continued_30000000_v1/ppo_crypto_trading.zip
 cloud_deploy/gmail credentials/gmail_credential.json
 cloud_deploy/gmail credentials/token.json
+cloud_deploy/data/BTCUSD_data.csv
+cloud_deploy/data/DXY_data.csv
+cloud_deploy/data/gmail_credential.json
+cloud_deploy/data/GOLD_data.csv
+cloud_deploy/data/NDQ_data.csv
+cloud_deploy/data/Processed_BTC.csv
+cloud_deploy/data/Processed_DXY.csv
+cloud_deploy/data/Processed_GOLD.csv
+cloud_deploy/data/Processed_NDQ.csv
+cloud_deploy/data/Processed_SPX.csv
+cloud_deploy/data/Processed_US02Y.csv
+cloud_deploy/data/Processed_US10Y.csv
+cloud_deploy/data/Processed_VIX.csv
+cloud_deploy/data/SPX_data.csv
+cloud_deploy/data/token.json
+cloud_deploy/data/US02Y_data.csv
+cloud_deploy/data/US10Y_data.csv
+cloud_deploy/data/VIX_data.csv
+cloud_deploy/data/apikey.txt
