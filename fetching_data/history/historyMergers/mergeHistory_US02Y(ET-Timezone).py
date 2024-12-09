@@ -4,14 +4,14 @@ import os
 print("**1. Load Historical Data**")
 # Adjust the file path to your US02Y historical data file
 historical = pd.read_csv(
-    '..\\barchart\\merged + filled data\\estimated_2yr_yield_1min_duration_method_adjusted.csv',
+    '../barchart/merged + filled data/estimated_2yr_yield_1min_duration_method_adjusted.csv',
     delimiter=',',  # Use comma as delimiter
     header=0,  # Assuming the file has a header row
     names=['Time', 'Estimated_Yield_%']
 )
 
 print("**2. Load Live Data**")
-live = pd.read_csv('..\\..\\live\\PriceData\\US02Y_data.csv', delimiter=',', header=0)
+live = pd.read_csv('../../live/PriceData/US02Y_data.csv', delimiter=',', header=0)
 
 print("**3. Preprocess Historical Data**")
 # Convert 'Time' to datetime

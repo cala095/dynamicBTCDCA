@@ -1,7 +1,7 @@
 import pandas as pd
 
 # Read the CSV file
-df = pd.read_csv('tnx 1m\\tnx_intraday_merged.csv', parse_dates=['Time'])
+df = pd.read_csv('tnx 1m/tnx_intraday_merged.csv', parse_dates=['Time'])
 
 # Set Time column as index
 df.set_index('Time', inplace=True)

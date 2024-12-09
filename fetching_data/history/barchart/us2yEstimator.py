@@ -4,7 +4,7 @@ import numpy as np
 # --- Step 1: Load SHY Intraday Data ---
 
 # Replace with the path to your merged SHY data file
-shy_data = pd.read_csv('shy (1 - 3 years maturity U.S. T.NOTE) 1m\\shy_intraday_merged.csv')
+shy_data = pd.read_csv('shy (1 - 3 years maturity U.S. T.NOTE) 1m/shy_intraday_merged.csv')
 
 # Convert 'Time' column to datetime
 shy_data['Time'] = pd.to_datetime(shy_data['Time'])
@@ -19,7 +19,7 @@ shy_data['Date'] = shy_data['Time'].dt.date
 # --- Step 2: Load 2-Year Treasury Yield Data ---
 
 # Replace with the path to your 2-year yield data file
-yield_data = pd.read_csv('U.S. 2y yield 1d\\usty2rt_daily_historical-data-11-15-2024.csv', skipfooter=1, engine='python')
+yield_data = pd.read_csv('U.S. 2y yield 1d/usty2rt_daily_historical-data-11-15-2024.csv', skipfooter=1, engine='python')
 
 # Convert 'Time' column to datetime
 yield_data['Time'] = pd.to_datetime(yield_data['Time'], format='%m/%d/%Y')

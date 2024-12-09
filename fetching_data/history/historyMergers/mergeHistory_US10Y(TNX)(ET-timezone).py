@@ -4,14 +4,14 @@ import os
 print("**1. Load Historical Data**")
 # Adjust the file path to your TNX historical data file
 historical = pd.read_csv(
-    '..\\barchart\\merged + filled data\\tnx_filled_data.csv',
+    '../barchart/merged + filled data/tnx_filled_data.csv',
     delimiter=',',  # Use comma as delimiter
     header=0,  # Assuming the file has a header row
     names=['Time', 'Open', 'High', 'Low', 'Last', 'Change', '%Chg', 'Volume']
 )
 
 print("**2. Load Live Data**")
-live = pd.read_csv('..\\..\\live\\PriceData\\US10Y_data.csv', delimiter=',', header=0)
+live = pd.read_csv('../../live/PriceData/US10Y_data.csv', delimiter=',', header=0)
 
 print("**3. Preprocess Historical Data**")
 # Convert 'Time' to datetime

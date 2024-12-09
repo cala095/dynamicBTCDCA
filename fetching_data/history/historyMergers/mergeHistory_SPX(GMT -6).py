@@ -3,14 +3,14 @@ import os
 
 print("**1. Load Historical Data**")
 historical = pd.read_csv(
-    '..\\backtest-market\\spx-1m-1\\spx-1m.csv',
+    '../backtest-market/spx-1m-1/spx-1m.csv',
     delimiter=';',
     header=None,
     names=['Date', 'Time', 'Open', 'High', 'Low', 'Close', 'Volume']
 )
 
 print("**2. Load Live Data**")
-live = pd.read_csv('..\\..\\live\\PriceData\\SPX_data.csv', delimiter=',', header=0)
+live = pd.read_csv('../../live/PriceData/SPX_data.csv', delimiter=',', header=0)
 
 print("**3. Preprocess Live Data**")
 # Convert timestamp to datetime

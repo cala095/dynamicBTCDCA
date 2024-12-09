@@ -3,14 +3,14 @@ import os
 
 print("**1. Load Historical Data**")
 historical_DXY = pd.read_csv(
-    '..\\backtest-market\\dlarind-1m_bk\\dlarind-1m_bk.csv',
+    '../backtest-market/dlarind-1m_bk/dlarind-1m_bk.csv',
     delimiter=';',
     header=None,
     names=['Date', 'Time', 'Open', 'High', 'Low', 'Close', 'Volume']
 )
 
 print("**2. Load Live Data**")
-live_DXY = pd.read_csv('..\\..\\live\\PriceData\\DXY_data.csv', delimiter=',', header=0)
+live_DXY = pd.read_csv('../../live/PriceData/DXY_data.csv', delimiter=',', header=0)
 
 print("**3. Preprocess Historical Data**")
 # Combine Date and Time into a single datetime column

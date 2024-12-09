@@ -87,7 +87,7 @@ def update_processed_data(ticker_name, processed_file, live_file):
 def copy_btc_data():
     try:
         print("** Reading BTCUSD_data.csv **")
-        df = pd.read_csv('..\\..\\live\\PriceData\\BTCUSD_data.csv')
+        df = pd.read_csv('../../live/PriceData/BTCUSD_data.csv')
         
         print("** Convert Unix time to formatted datetime **")
         # Convert 'Timestamp' to datetime assuming it's in seconds and in UTC
@@ -162,6 +162,6 @@ if __name__ == "__main__":
     tickers = ['DXY', 'GOLD', 'NDQ', 'US02Y', 'US10Y', 'VIX', 'SPX']
     for ticker in tickers:
         processed_file_path = f'Processed_{ticker}.csv'
-        live_file_path = f'..\\..\\live\\PriceData\\{ticker}_data.csv'
+        live_file_path = f'../../live/PriceData/{ticker}_data.csv'
         update_processed_data(ticker, processed_file_path, live_file_path)
 

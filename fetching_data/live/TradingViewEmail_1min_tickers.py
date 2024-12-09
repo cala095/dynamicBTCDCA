@@ -212,7 +212,7 @@ def parse_time(data_time):
     raise ValueError(f"Unable to parse time: {data_time}")
 
 def load_last_ticker_state(ticker):
-    state_file = f"PriceData\\{ticker}_state.json"
+    state_file = f"PriceData/{ticker}_state.json"
     if os.path.exists(state_file):
         with open(state_file, 'r') as f:
             state = json.load(f)
@@ -228,7 +228,7 @@ def load_last_ticker_state(ticker):
         return None, None, None
 
 def save_last_ticker_state(ticker, last_timestamp, last_price, last_volume):
-    state_file = f"PriceData\\{ticker}_state.json"
+    state_file = f"PriceData/{ticker}_state.json"
     state = {
         'last_timestamp': last_timestamp.isoformat(),
         'last_price': last_price,
@@ -238,7 +238,7 @@ def save_last_ticker_state(ticker, last_timestamp, last_price, last_volume):
         json.dump(state, f)
 
 def get_last_timestamp_from_file(ticker):
-    data_file = f"PriceData\\{ticker}_data.csv"
+    data_file = f"PriceData/{ticker}_data.csv"
     if not os.path.exists(data_file):
         return None
     df = pd.read_csv(data_file)
@@ -264,7 +264,7 @@ def process_ticker_data(ticker, data):
     current_timestamp = current_timestamp.replace(tzinfo=None, second=0, microsecond=0)
 
     # Load existing data into a DataFrame without date_parser
-    data_file = f"PriceData\\{ticker}_data.csv"
+    data_file = f"PriceData/{ticker}_data.csv"
     if os.path.exists(data_file):
         df_existing = pd.read_csv(data_file)
     else:
@@ -375,7 +375,7 @@ def sync_missing_data():
                 })
 
                 # Load existing data without date_parser
-                data_file = f"PriceData\\{ticker}_data.csv"
+                data_file = f"PriceData/{ticker}_data.csv"
                 if os.path.exists(data_file):
                     df_existing = pd.read_csv(data_file)
                 else:
