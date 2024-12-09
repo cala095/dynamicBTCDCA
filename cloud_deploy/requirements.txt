@@ -11,7 +11,8 @@ python3 -m venv btcdca_env
 source btcdca_env/bin/activate
 
 pip install gdown
-
+pip install pandas google-auth google-auth-oauthlib google-api-python-client beautifulsoup4 
+pip install requests
 
 
 
@@ -27,7 +28,7 @@ activate and install python packages in the virtual env
 clone the repo
 download the zip -> inside \dynamicBTCDCA\cloud_deploy run: gdown 1-xbfA6MHE_tUI1NVOk0oOS48ZJ3rYe46 -> (https://drive.google.com/file/d/1-xbfA6MHE_tUI1NVOk0oOS48ZJ3rYe46/view?usp=sharing take the id from the download link)
 exctract it: unzip files_archive.zip -d data/
-deploy the files in the repo: python3 
+deploy the files in the repo: python3 file_deploy_config.py
 
 
 --------------- vm-backups
