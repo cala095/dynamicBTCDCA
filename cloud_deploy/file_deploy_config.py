@@ -22,7 +22,9 @@ file_destinations = {
     "US02Y_data.csv": "../fetching_data/live/PriceData",
     "US10Y_data.csv": "../fetching_data/live/PriceData",
     "VIX_data.csv": "../fetching_data/live/PriceData",
-    "apikey.txt": "../fetching_data/live/PriceData",
+    "apikey.txt": "../fetching_data/live",
+    "gmail_credentials.json": "../fetching_data/live",
+    "token.json": "../fetching_data/live"
 }
 
 # Move the files

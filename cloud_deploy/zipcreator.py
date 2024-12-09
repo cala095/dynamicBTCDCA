@@ -27,7 +27,9 @@ file_paths = {
     "US02Y_data.csv": "../fetching_data/live/PriceData",
     "US10Y_data.csv": "../fetching_data/live/PriceData",
     "VIX_data.csv": "../fetching_data/live/PriceData",
-    "apikey.txt": "../fetching_data/live/PriceData",
+    "apikey.txt": "../fetching_data/live",
+    "gmail_credentials.json": "gmail credentials",
+    "token.json": "gmail credentials"
 }
 
 zip_name = "files_archive.zip"
