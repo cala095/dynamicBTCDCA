@@ -149,8 +149,9 @@ def copy_btc_data():
         df = df[cols]
         
         # Save the processed data to a new CSV file
-        print("** Save to a new CSV file **")
+        print("** trying to save BTCUSD to a new CSV file **")
         df.to_csv('Processed_BTC.csv', index=False)
+        print("** Processed_BTC.csv Saved **")
     except Exception as e:
         print(f"Error transforming BTC data: {str(e)}\n")
 
