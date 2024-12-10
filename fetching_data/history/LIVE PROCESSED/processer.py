@@ -15,6 +15,10 @@ def update_processed_data(ticker_name, processed_file, live_file):
     # **2. Load New Live Data**
     print("Loading new live data...")
     live_df = pd.read_csv(live_file)
+    # **2.1 Deleting Live except last 10 lines **
+    print("Deleting useless live data...") #TODO kinda risky doing this here -> should be better doing it at the end (but i dont want to lose time to avoid losing email/btcrequests)
+    last_10_lines = live_df.tail(10)
+    last_10_lines.to_csv(live_file)
 
     # **3. Preprocess Live Data**
     print("Preprocessing live data...")
@@ -87,19 +91,22 @@ def update_processed_data(ticker_name, processed_file, live_file):
 def copy_btc_data():
     try:
         print("** Reading BTCUSD_data.csv **")
-        df = pd.read_csv('../../live/PriceData/BTCUSD_data.csv')
+        live_df = pd.read_csv('../../live/PriceData/BTCUSD_data.csv')
+        print(" Deleting useless live data...") #TODO kinda risky doing this here -> should be better doing it at the end (but i dont want to lose time to avoid losing email/btcrequests)
+        last_10_lines = live_df.tail(10)
+        last_10_lines.to_csv('../../live/PriceData/BTCUSD_data.csv')
         
         print("** Convert Unix time to formatted datetime **")
         # Convert 'Timestamp' to datetime assuming it's in seconds and in UTC
-        df['Datetime'] = pd.to_datetime(df['Timestamp'], unit='s', utc=True)
+        live_df['Datetime'] = pd.to_datetime(live_df['Timestamp'], unit='s', utc=True)
         
         # Remove duplicates based on 'Timestamp'
         print("** Removing duplicates based on Timestamp **")
-        duplicates = df.duplicated(subset='Timestamp', keep=False)
+        duplicates = live_df.duplicated(subset='Timestamp', keep=False)
         num_duplicates = duplicates.sum()
         if num_duplicates > 0:
             # Create a DataFrame of duplicated records
-            duplicated_records = df[duplicates]
+            duplicated_records = live_df[duplicates]
             # Save duplicated records to a CSV file
             duplicated_records.to_csv('duplicated_records.csv', index=False)
             print(f"Found {num_duplicates} duplicate entries")
@@ -113,22 +120,22 @@ def copy_btc_data():
                 max_volume_row = group.loc[group['Volume'].idxmax()]
             
                 # Remove all rows with this timestamp and add back the one with max volume
-                df = df[df['Timestamp'] != timestamp]
-                df = pd.concat([df, pd.DataFrame([max_volume_row])], ignore_index=True)
+                live_df = live_df[live_df['Timestamp'] != timestamp]
+                live_df = pd.concat([live_df, pd.DataFrame([max_volume_row])], ignore_index=True)
             print("Duplicated records have been removed.csv")
 
         else:
             print("No duplicates found.")
         
         # Ensure the data is sorted by timestamp
-        df.sort_values(by='Datetime', inplace=True)
+        live_df.sort_values(by='Datetime', inplace=True)
         
         # Check for missing minutes
         print("** Checking for missing minutes **")
-        start = df['Datetime'].min()
-        end = df['Datetime'].max()
+        start = live_df['Datetime'].min()
+        end = live_df['Datetime'].max()
         complete_range = pd.date_range(start=start, end=end, freq='T', tz='UTC')
-        existing_timestamps = pd.to_datetime(df['Datetime'])
+        existing_timestamps = pd.to_datetime(live_df['Datetime'])
         missing_minutes = complete_range[~complete_range.isin(existing_timestamps)]
         
         if len(missing_minutes) > 0:
@@ -142,15 +149,67 @@ def copy_btc_data():
             print("No missing minutes found.")
         
         # Convert 'Datetime' to formatted string if needed
-        df['Formatted_Time'] = df['Datetime'].dt.strftime('%Y-%m-%d %H:%M:%S')
+        live_df['Formatted_Time'] = live_df['Datetime'].dt.strftime('%Y-%m-%d %H:%M:%S')
         
         # Reorder columns to put Formatted_Time at the beginning
-        cols = ['Formatted_Time'] + [col for col in df.columns if col != 'Formatted_Time' and col != 'Datetime']
-        df = df[cols]
+        cols = ['Formatted_Time'] + [col for col in live_df.columns if col != 'Formatted_Time' and col != 'Datetime']
+        live_df = live_df[cols]
+
+        # **1. Load Existing Processed Data**
+        print("Loading existing processed data...")
+        processed_file = 'Processed_BTC.csv'
+        processed_df = pd.read_csv(processed_file, parse_dates=['Formatted_Time'])
+
+        # **5. Merge Data**
+        print("Merging data...")
+        # # If 'Volume' is not present in both, ensure consistency
+        # if not volume_present and 'Volume' in processed_df.columns:
+        #     processed_df.drop(columns=['Volume'], inplace=True)
+
+        # Concatenate the dataframes
+        merged_df = pd.concat([processed_df, live_df], ignore_index=True)
+
+        # Remove duplicates based on 'datetime'
+        merged_df.drop_duplicates(subset='datetime', keep='last', inplace=True)
+
+        # Sort by 'datetime'
+        merged_df.sort_values(by='datetime', inplace=True)
+
+        # **6. Forward Fill Missing Data**
+        print("Forward filling missing data...")
+        merged_df.set_index('datetime', inplace=True)
+
+        # Create a complete datetime index from start to end at 1-minute frequency
+        all_minutes = pd.date_range(
+            start=merged_df.index.min(),
+            end=merged_df.index.max(),
+            freq='T'
+        )
+
+        merged_df = merged_df.reindex(all_minutes)
+
+        # Forward fill 'Price' values
+        merged_df['Price'] = merged_df['Price'].ffill()
+
+        # # Forward fill 'Volume' if present
+        # if volume_present and 'Volume' in merged_df.columns:
+        #     merged_df['Volume'] = merged_df['Volume'].ffill()
+        # else:
+        #     # Drop 'Volume' column if not needed
+        #     if 'Volume' in merged_df.columns:
+        #         merged_df.drop(columns=['Volume'], inplace=True)
+
+        # # Reset index to make 'datetime' a column again
+        # merged_df.reset_index(inplace=True)
+        # merged_df.rename(columns={'index': 'datetime'}, inplace=True)
+
+        # # **7. Save the Updated Data**
+        # print("Saving updated data...")
+        # merged_df.to_csv(processed_file, index=False)
         
         # Save the processed data to a new CSV file
         print("** trying to save BTCUSD to a new CSV file **")
-        df.to_csv('Processed_BTC.csv', index=False)
+        merged_df.to_csv('Processed_BTC.csv', index=False)
         print("** Processed_BTC.csv Saved **")
     except Exception as e:
         print(f"Error transforming BTC data: {str(e)}\n")

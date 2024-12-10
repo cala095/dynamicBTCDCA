@@ -8,7 +8,7 @@ MUST HAVE
 i have to update the method i'm using to sum volumes for the minute in trading view.
 instead of summing directly i have to subtract the last value known for the minute to the new one (wich will be bigger) and the update
 
-[] HANDLE DATA BACK-UP FOR LIVE PROCESSED AND AVOID DATA REPLICATION IN LIVE [] ALSO CRYPTOCOMPARE STILL CREATE SOME DUPLICATION ON THE RAW DATA BEFORE PROCESSING
+[x] HANDLE DATA BACK-UP FOR LIVE PROCESSED AND AVOID DATA REPLICATION IN LIVE [] ALSO CRYPTOCOMPARE STILL CREATE SOME DUPLICATION ON THE RAW DATA BEFORE PROCESSING
 (-> for the already processed data -> saved in historical)
 
 [] HANDLE BTC DATA IN LIVE
