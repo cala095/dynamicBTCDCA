@@ -1,0 +1,48 @@
+---linux
+sudo apt-get install nodejs
+sudo apt install nodejs npm
+
+-------inside the site folder after cloning the repo
+npm init -y
+npm install express ejs body-parser
+
+------open port :8080
+gcloud compute firewall-rules create allow-8080 --allow=tcp:8080 --description="Allow port 8080" --direction=INGRESS --priority=1000 --network=default --source-ranges=0.0.0.0/0
+    -> this is extreme but just for testing
+
+---install nginx for routing and certbot for https
+sudo apt-get install nginx
+sudo apt-get install certbot python3-certbot-nginx
+sudo certbot --nginx -d btc-accumulator.com -d www.btc-accumulator.com
+------congif nginx
+sudo nano /etc/nginx/sites-available/default
+server {
+  listen 80;
+  listen [::]:80;
+  server_name btc-accumulator.com www.btc-accumulator.com;
+  return 301 https://$host$request_uri;
+}
+
+server {
+  listen 443 ssl;
+  listen [::]:443 ssl;
+  server_name btc-accumulator.com www.btc-accumulator.com;
+
+  ssl_certificate /etc/letsencrypt/live/btc-accumulator.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/btc-accumulator.com/privkey.pem;
+
+  location / {
+    proxy_pass http://127.0.0.1:8080;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+  }
+}
+
+
+
+-----run it
+node server.js
+

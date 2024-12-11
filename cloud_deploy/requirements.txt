@@ -31,5 +31,11 @@ exctract it: unzip files_archive.zip -d data/
 deploy the files in the repo: python3 file_deploy_config.py
 
 
+---------------util
+nohup python3 dataFetcher.py > /dev/null 2>error.log & echo $! > process_pid.txt            -> to launch the script without killing it at the logout with ssh, also should log errors and save pid of the background process launched
+top                                                                                         -> list all active process
+ps -p 23990                                                                                 -> monitor a specific process
+kill -0 23990
+
 --------------- vm-backups
 pre-exc-cdf-with-gmail-crt
