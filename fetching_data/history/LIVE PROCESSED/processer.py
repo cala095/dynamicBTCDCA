@@ -96,7 +96,7 @@ def copy_btc_data():
         live_df = pd.read_csv('../../live/PriceData/BTCUSD_data.csv')
         
         print("Cleaning up live data (keeping only last 10 lines)...")
-        last_10_lines = live_df.tail(20)
+        last_10_lines = live_df.tail(120)
         last_10_lines.to_csv('../../live/PriceData/BTCUSD_data.csv', index=False)
         
         # Convert 'Timestamp' to datetime (UTC)
