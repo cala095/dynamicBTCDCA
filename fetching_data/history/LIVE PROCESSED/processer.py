@@ -216,7 +216,7 @@ def copy_btc_data():
 
 if __name__ == "__main__":
     # BTC data
-    # copy_btc_data()
+    copy_btc_data()
 
     # tickers
     tickers = ['DXY', 'GOLD', 'NDQ', 'US02Y', 'US10Y', 'VIX', 'SPX']
