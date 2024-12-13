@@ -13,6 +13,7 @@ source btcdca_env/bin/activate
 pip install gdown
 pip install pandas google-auth google-auth-oauthlib google-api-python-client beautifulsoup4 
 pip install requests
+pip install pandas pandas_ta numpy numba
 
 
 
@@ -39,3 +40,4 @@ kill -0 23990
 
 --------------- vm-backups
 pre-exc-cdf-with-gmail-crt
+
