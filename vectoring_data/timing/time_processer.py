@@ -105,7 +105,7 @@ if __name__ == "__main__":
         exit(1)
     
     # Get the list of CSV files in the input directory
-    csv_files = [f for f in os.listdir(input_dir) if f.endswith('.csv') and "duplicated_records" not in f]
+    csv_files = [f for f in os.listdir(input_dir) if f.endswith('.csv') and ("duplicated_records" not in f or "missing_minutes" not in f)]
     
     if not csv_files:
         print(f"No CSV files found in {input_dir}.")
