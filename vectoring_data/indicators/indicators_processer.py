@@ -326,7 +326,7 @@ if __name__ == "__main__":
     base_output_dir = 'indicators_data'
     tickers = ['BTC', 'DXY', 'GOLD', 'NDQ', 'US02Y', 'US10Y', 'VIX', 'SPX']
     time_frames = [
-        ('1 minute', 'm'),
+        # ('1 minute', 'm'), #TODO: this is no longer needed since i'm not putting this data in the model
         ('1 hour', 'H'),
         ('1 day', 'D'),
         ('1 week', 'W'),
