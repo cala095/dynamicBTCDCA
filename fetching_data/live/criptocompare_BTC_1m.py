@@ -206,11 +206,13 @@ def main(csv_file, api_key):
                 else:
                     print("No new data downloaded.")
 
-                # Wait until the start of the next minute
-                print("Waiting for the next minute...")
+                
                 now = datetime.now(timezone.utc)
                 sleep_seconds = 60 - now.second
-                time.sleep(sleep_seconds)
+                # Wait until the start of the next minute
+                print(f"Waiting for the next minute...{sleep_seconds}s")
+                time.sleep(sleep_seconds+1)
+                
 
             except KeyboardInterrupt:
                 print("Script terminated by user.")
