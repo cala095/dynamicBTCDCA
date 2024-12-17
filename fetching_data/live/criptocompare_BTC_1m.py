@@ -181,38 +181,40 @@ def main(csv_file, api_key):
             try:
                 new_data = fetch_latest_data(api_key)
                 if new_data is not None and not new_data.empty:
-                    # Check if new_data timestamp is greater than last_timestamp
-                    new_timestamp = new_data['time'].iloc[0]
-                    if new_timestamp > last_timestamp:
-                        # Process new data
-                        new_data['Timestamp'] = new_data['time']
-                        new_data.rename(columns={
+                    # Filter rows to only those newer than last_timestamp
+                    new_rows = new_data[new_data['time'] > last_timestamp]
+
+                    if not new_rows.empty:
+                        # Rename columns
+                        new_rows['Timestamp'] = new_rows['time']
+                        new_rows.rename(columns={
                             'open': 'Open',
                             'high': 'High',
                             'low': 'Low',
                             'close': 'Close',
                             'volumefrom': 'Volume'
                         }, inplace=True)
-                        new_data = new_data[['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume']]
 
-                        # Append new data to CSV file
-                        new_data.to_csv(csv_file, mode='a', header=False, index=False)
+                        new_rows = new_rows[['Timestamp', 'Open', 'High', 'Low', 'Close', 'Volume']]
 
-                        # Update last_timestamp
-                        last_timestamp = new_timestamp
-                        print(f"Appended new record to {csv_file} at {datetime.fromtimestamp(new_timestamp, timezone.utc)}")
+                        # Append new rows to CSV file
+                        new_rows.to_csv(csv_file, mode='a', header=False, index=False)
+
+                        # Update last_timestamp to the maximum timestamp appended
+                        updated_timestamp = new_rows['Timestamp'].max()
+                        print(f"Appended new record(s) up to {datetime.fromtimestamp(updated_timestamp, timezone.utc)}")
+                        print(new_rows)
+                        last_timestamp = updated_timestamp
                     else:
-                        print("No new data available yet.")
+                        print("No new data available yet (all data already processed).")
                 else:
                     print("No new data downloaded.")
 
-                
+                # Wait until the start of the next minute
                 now = datetime.now(timezone.utc)
                 sleep_seconds = 60 - now.second
-                # Wait until the start of the next minute
-                print(f"Waiting for the next minute...{sleep_seconds}s")
-                time.sleep(sleep_seconds+1)
-                
+                print(f"Waiting for the next minute... {sleep_seconds}s")
+                time.sleep(sleep_seconds + 1)
 
             except KeyboardInterrupt:
                 print("Script terminated by user.")
