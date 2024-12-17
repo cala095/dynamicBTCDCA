@@ -33,6 +33,16 @@ files1W = ['../../vectoring_data/indicators/indicators_data/1 week/Processed_BTC
         '../../vectoring_data/indicators/indicators_data/1 week/Processed_US10Y_with_indicators_1W.csv',
         '../../vectoring_data/indicators/indicators_data/1 week/Processed_VIX_with_indicators_1W.csv',
          ]
+# List of 1M
+files1M = ['../../vectoring_data/indicators/indicators_data/1 year/Processed_BTC_with_indicators_1M.csv',
+         '../../vectoring_data/indicators/indicators_data/1 year/Processed_DXY_with_indicators_1M.csv',
+        '../../vectoring_data/indicators/indicators_data/1 year/Processed_GOLD_with_indicators_1M.csv',
+        '../../vectoring_data/indicators/indicators_data/1 year/Processed_NDQ_with_indicators_1M.csv',
+        '../../vectoring_data/indicators/indicators_data/1 year/Processed_SPX_with_indicators_1M.csv',
+        '../../vectoring_data/indicators/indicators_data/1 year/Processed_US02Y_with_indicators_1M.csv',
+        '../../vectoring_data/indicators/indicators_data/1 year/Processed_US10Y_with_indicators_1M.csv',
+        '../../vectoring_data/indicators/indicators_data/1 year/Processed_VIX_with_indicators_1M.csv',
+         ]   
 # List of 1Y
 files1Y = ['../../vectoring_data/indicators/indicators_data/1 year/Processed_BTC_with_indicators_1Y.csv',
          '../../vectoring_data/indicators/indicators_data/1 year/Processed_DXY_with_indicators_1Y.csv',
@@ -86,7 +96,13 @@ if __name__ == "__main__":
     #praticamente questo codice deve ogni ora (-> in realtà quando vectoring data ha finito di processare i dati con indicatori etc. #TODO rimuovi la creazione di indicators per btc 1m) eseguire le istruzioni sotto 
     
     # merger(files1m, "merged_data_1m") -> no longer used we swith to take 1 minute live data from live #TODO if you are not in prod this will be used to have storic data (indicators are useless but the rest is good)
+    print("** merging 1H **")
     merger(files1H, "merged_data_1H")
+    print("** merging 1D **")
     merger(files1D, "merged_data_1D")
+    print("** merging 1W **")
     merger(files1W, "merged_data_1W")
+    print("** merging 1M **")
+    merger(files1Y, "merged_data_1M")
+    print("** merging 1Y **")
     merger(files1Y, "merged_data_1Y")
