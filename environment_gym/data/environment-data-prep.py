@@ -81,7 +81,11 @@ def merger(fileList, outputname):
     merged_df.to_csv(outputname + ".csv")
 
 if __name__ == "__main__":
-    merger(files1m, "merged_data_1m")
+    #TODO:
+    # -> istruzione che recupera ogni minuto i dati da live e li appende a un file che rispetta il processing adatto al modello (vedi codice sopra)
+    #praticamente questo codice deve ogni ora (-> in realtà quando vectoring data ha finito di processare i dati con indicatori etc. #TODO rimuovi la creazione di indicators per btc 1m) eseguire le istruzioni sotto 
+    
+    # merger(files1m, "merged_data_1m") -> no longer used we swith to take 1 minute live data from live #TODO if you are not in prod this will be used to have storic data (indicators are useless but the rest is good)
     merger(files1H, "merged_data_1H")
     merger(files1D, "merged_data_1D")
     merger(files1W, "merged_data_1W")

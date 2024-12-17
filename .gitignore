@@ -232,3 +232,9 @@ cloud_deploy/data/US02Y_data.csv
 cloud_deploy/data/US10Y_data.csv
 cloud_deploy/data/VIX_data.csv
 cloud_deploy/data/apikey.txt
+environment_gym/data/filtered_1m_btc_training.csv
+fetching_data/history/LIVE PROCESSED/missing_minutes.csv
+fetching_data/history/LIVE PROCESSED/Processed_BTC copy.csv
+environment_gym/ppo_crypto_trading_60000000_v1_continued_40000000_v1/vec_normalize.pkl
+environment_gym/ppo_crypto_trading_60000000_v1_continued_40000000_v1/ppo_crypto_trading.zip
+environment_gym/ppo_crypto_trading_60000000_v1_continued_40000000_v1/ppo_crypto_trading_output.log
