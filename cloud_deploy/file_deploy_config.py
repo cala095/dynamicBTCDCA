@@ -2,7 +2,7 @@ import os
 import shutil
 
 # Define the source directory
-source_dir = "data"
+source_dir = "init_deploy_data"
 
 # Define the files to move and their destinations
 file_destinations = {
