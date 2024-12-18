@@ -16,7 +16,7 @@ try:
     with open('last_size.txt', 'r') as file:
         last_size = int(file.read().strip())
 except FileNotFoundError:
-    last_size = 2335904337  # Default value if file not found
+    last_size = 2322366118  # Default value if file not found
 
 # Get the current folder size
 current_size = get_folder_size(folder_path)
