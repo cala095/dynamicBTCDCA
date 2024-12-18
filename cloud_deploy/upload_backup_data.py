@@ -61,7 +61,7 @@ def upload_csv_files(local_directory, bucket_name, prefix=""):
 if __name__ == "__main__":
 
     folder_path_bkp = '../fetching_data/history/LIVE PROCESSED'  # Replace with the actual folder path
-    csv_files = [f for f in os.listdir(folder_path_env) if is_valid_csv(f)]
+    csv_files = [f for f in os.listdir(folder_path_bkp) if is_valid_csv(f)]
 
     # Read the last recorded size from a file
     try:
