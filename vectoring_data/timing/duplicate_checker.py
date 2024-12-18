@@ -1,8 +1,8 @@
-#I HAD A PROBLEM WHILE CREATING THE INDICATORS SO I CREATED THIS UTIL-> LOOK LIKE I'M NOT PARSING CORRECTLY THE UNIX TIMESTAMP FOR BTC 
-
+#I HAD A PROBLEM WHILE CREATING THE INDICATORS SO I CREATED THIS UTIL
 import pandas as pd
 import os
 
+duplicates_found = False
 
 def check_duplicates(file_path, report_file_path):
     # Read the data with headers
@@ -36,6 +36,7 @@ def check_duplicates(file_path, report_file_path):
         # Write duplicates to report file
         duplicates.to_csv(report_file_path, index=False)
         print(f"Found {len(duplicates)} duplicates in {file_path}. Report saved to {report_file_path}")
+        duplicates_found = True
     else:
         print(f"No duplicates found in {file_path}")
 
@@ -62,3 +63,8 @@ if __name__ == "__main__":
                 report_file_path = os.path.splitext(report_file_path)[0] + '_duplicates.csv'
                 # Call check_duplicates
                 check_duplicates(file_path, report_file_path)
+    
+    if duplicates_found:
+        print("CRITICAL ERROR DUPLICATES FOUND")
+    else:
+        print("STATUS OK")

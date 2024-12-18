@@ -258,3 +258,4 @@ cloud_deploy/init_deploy_data/token.json
 cloud_deploy/init_deploy_data/US02Y_data.csv
 cloud_deploy/init_deploy_data/US10Y_data.csv
 cloud_deploy/init_deploy_data/VIX_data.csv
+fetching_data/logging/cloud_data_distribution.log
