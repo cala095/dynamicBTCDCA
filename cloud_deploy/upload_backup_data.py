@@ -70,16 +70,28 @@ if __name__ == "__main__":
     except FileNotFoundError:
         last_size = 2252950726  # Default value if file not found
 
-    # Get the current folder size
-    current_size = get_files_size(folder_path_bkp, csv_files)
+    #WE CAN HAVE THE PROGRAM STUCK WHEN processer.py is rewriting the files #TODO imlement lock to avoid possibile starting uploads with incomplete files that goes over the last dimensions
+    start_time = time.time()
+    while True:
+        # Check if 15 minutes have passed
+        elapsed_time = time.time() - start_time
+        # Get the current folder size
+        current_size = get_files_size(folder_path_bkp, csv_files)
 
-    # Compare the current size with the last recorded size
-    if current_size >= last_size:
-        print(f"The folder size is: {current_size} bytes")
-    else:
-        print(f"The folder size is: {current_size} bytes")
-        print("DIMENSION LESS THAN EXPECTED")
-        sys.exit(1)
+        # Compare the current size with the last recorded size
+        if current_size >= last_size:
+            print(f"The folder size is: {current_size} bytes")
+        else:
+            print(f"The folder size is: {current_size} bytes")
+            print(f"DIMENSION LESS THAN EXPECTED, wait 10s, time lapsed:{elapsed_time}/900 ")
+        if elapsed_time >= 15 * 60:  # 15 minutes * 60 seconds
+            print(f"time lapsed:{elapsed_time} on 900 -> exiting")
+            sys.exit(1)
+        # Wait 10 seconds before the next check
+        time.sleep(10)
+
+
+    
 
     # Write the current size to the file
     with open('last_size_LIVE-PROCESSED.txt', 'w') as file:
