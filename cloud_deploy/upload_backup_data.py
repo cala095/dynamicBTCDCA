@@ -82,6 +82,7 @@ if __name__ == "__main__":
         # Compare the current size with the last recorded size
         if current_size >= last_size:
             print(f"The folder size is: {current_size} bytes")
+            break
         else:
             print(f"The folder size is: {current_size} bytes")
             print(f"DIMENSION LESS THAN EXPECTED, wait 10s, time lapsed:{elapsed_time}/900 ")
