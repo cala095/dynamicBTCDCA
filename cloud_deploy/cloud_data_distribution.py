@@ -227,7 +227,7 @@ async def main():
             await run_script(*ENV_DATA_PREP)
             # await run_script(*ENV_PROD) -> we will lunch this on his own
             #TODO add the upload script
-            await run_script(*UPLOAD_BACKUP_DATA)
+            await run_script(*UPLOAD_BACKUP_DATA, check_output=True, expected_output="STATUS OK")
 
             # Wait for the next hour before restarting the loop
             now = datetime.now()
