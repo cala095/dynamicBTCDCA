@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 from google.cloud import storage
 
 # Get the list of CSV files in the input directory -> for size check
