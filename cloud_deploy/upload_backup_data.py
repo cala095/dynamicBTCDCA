@@ -68,7 +68,7 @@ if __name__ == "__main__":
         with open('last_size.txt', 'r') as file:
             last_size = int(file.read().strip())
     except FileNotFoundError:
-        last_size = 2793590019  # Default value if file not found
+        last_size = 2252950726  # Default value if file not found
 
     # Get the current folder size
     current_size = get_files_size(folder_path_bkp, csv_files)
