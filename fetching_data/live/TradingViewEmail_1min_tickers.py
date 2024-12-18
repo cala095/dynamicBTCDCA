@@ -273,7 +273,7 @@ def get_last_timestamp_from_file(ticker):
     data_file = f"PriceData/{ticker}_data.csv"
     if not os.path.exists(data_file):
         return None
-    df = pd.safe_read_csv(data_file)
+    df = safe_read_csv(data_file)
     if df.empty:
         return None
     # Parse 'timestamp' column
@@ -298,7 +298,7 @@ def process_ticker_data(ticker, data):
     # Load existing data into a DataFrame without date_parser
     data_file = f"PriceData/{ticker}_data.csv"
     if os.path.exists(data_file):
-        df_existing = pd.safe_read_csv(data_file)
+        df_existing = safe_read_csv(data_file)
     else:
         df_existing = pd.DataFrame(columns=['timestamp', 'price', 'volume'])
 
