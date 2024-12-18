@@ -106,3 +106,5 @@ if __name__ == "__main__":
     merger(files1Y, "merged_data_1M")
     print("** merging 1Y **")
     merger(files1Y, "merged_data_1Y")
+
+    print("STATUS OK")

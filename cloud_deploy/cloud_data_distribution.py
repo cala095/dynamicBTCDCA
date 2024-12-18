@@ -222,9 +222,9 @@ async def main():
             # If we reached this point:
             # We have the same day/hour and more than 2000 seconds until next hour
             # Proceed with the sequence:
-            await run_script(*TIME_PROCESSER)
-            await run_script(*INDICATORS_PROCESSER)
-            await run_script(*ENV_DATA_PREP)
+            await run_script(*TIME_PROCESSER, check_output=True, expected_output="STATUS OK")
+            await run_script(*INDICATORS_PROCESSER, check_output=True, expected_output="STATUS OK")
+            await run_script(*ENV_DATA_PREP, check_output=True, expected_output="STATUS OK")
             # await run_script(*ENV_PROD) -> we will lunch this on his own
             #TODO add the upload script
             await run_script(*UPLOAD_BACKUP_DATA, check_output=True, expected_output="STATUS OK")

@@ -122,3 +122,5 @@ if __name__ == "__main__":
         print(f"Processing {file_path}...")
         resample_data(file_path, output_base_dir)
         print(f"Finished processing {file_path}.")
+    
+    print("STATUS OK")

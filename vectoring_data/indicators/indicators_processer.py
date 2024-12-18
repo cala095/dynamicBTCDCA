@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import sys
 import pandas_ta as ta
 import numpy as np
 from numba import njit
@@ -134,7 +135,8 @@ def calculate_indicators(file_path, output_file):
         df['datetime'] = pd.to_datetime(df['datetime'])
         df.rename(columns={'datetime': 'Formatted_Time'}, inplace=True)
     else:
-        print(f"Time column not found in {file_path}")
+        print(f"ERROR: Time column not found in {file_path}")
+        sys.exit(1)
         return
     
     df.set_index('Formatted_Time', inplace=True)
@@ -142,7 +144,8 @@ def calculate_indicators(file_path, output_file):
     # Check if required columns are present
     required_columns = {'Open', 'High', 'Low', 'Close'}
     if not required_columns.issubset(df.columns):
-        print(f"Required columns {required_columns} not found in {file_path}")
+        print(f"ERROR: Required columns {required_columns} not found in {file_path}")
+        sys.exit(1)
         return
     
     # Calculate Simple Moving Averages (SMAs)
@@ -349,4 +352,8 @@ if __name__ == "__main__":
                 print(f"Processing {input_file}...")
                 calculate_indicators(input_file, output_file)
             else:
-                print(f"File {input_file} not found.")
+                print(f"ERROR: File {input_file} not found. -> EXITING")
+                sys.exit(1)
+    
+    print("STATUS OK")
+    
