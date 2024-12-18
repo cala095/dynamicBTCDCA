@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
     # Read the last recorded size from a file
     try:
-        with open('last_size.txt', 'r') as file:
+        with open('last_size_LIVE-PROCESSED.txt', 'r') as file:
             last_size = int(file.read().strip())
     except FileNotFoundError:
         last_size = 2252950726  # Default value if file not found
