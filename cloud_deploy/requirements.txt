@@ -13,7 +13,9 @@ source btcdca_env/bin/activate
 pip install gdown
 pip install pandas google-auth google-auth-oauthlib google-api-python-client beautifulsoup4 
 pip install requests
-pip install pandas pandas_ta numpy numba
+pip install pandas pandas_ta numpy numba ---- (if for the indicators creation panda_ta is not working) -> pip install -U git+https://github.com/twopirllc/pandas-ta.git@development
+pip install --upgrade google-cloud-storage
+
 
 
 
@@ -34,9 +36,19 @@ deploy the files in the repo: python3 file_deploy_config.py
 
 ---------------util
 nohup python3 dataFetcher.py > /dev/null 2>error.log & echo $! > process_pid.txt            -> to launch the script without killing it at the logout with ssh, also should log errors and save pid of the background process launched
+nohup python3 cloud_data_distribution.py > /dev/null 2>error.log & echo $! > process_pid.txt
+ps aux | grep cala95
 top                                                                                         -> list all active process
 ps -p 23990                                                                                 -> monitor a specific process
 kill -0 23990
+
+-to upload a file to my cloud
+curl https://rclone.org/install.sh | sudo bash (install)
+rclone config (install)
+rclone copy transfer.zip 'cala95 gdrive':transfer_SRS
+
+
+
 
 --------------- vm-backups
 pre-exc-cdf-with-gmail-crt
