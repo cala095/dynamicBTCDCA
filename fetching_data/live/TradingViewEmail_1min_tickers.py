@@ -1,4 +1,5 @@
 import os
+import sys
 import base64
 import json
 import time
@@ -20,6 +21,37 @@ SCOPES = ['https://mail.google.com/']
 last_ticker_states = {}
 data_added = {}  # Tracks whether data was added for each ticker during the interval
 tickers = ['US10Y', 'US02Y', 'VIX', 'SPX', 'GOLD', 'NDQ', 'MOVE', 'DXY']  # List of tickers to monitor
+
+
+#TODO we we load the file it can be that the processer is working on it (we should add locks) -> quick fix is to retry to read the file if it's being cutted by processer.py
+    # so I made this method
+def safe_read_csv(filepath, retries=3, delay=1):
+    """
+    Attempts to read a CSV file with specified retries and delay.
+    If EmptyDataError occurs, waits for `delay` seconds and retries.
+    """
+    attempt = 0
+    while attempt < retries:
+        try:
+            df = pd.read_csv(filepath)
+            return df  # Return as soon as reading is successful
+        except EmptyDataError:
+            print(f"EmptyDataError encountered while reading {filepath}. Waiting {delay} second(s) before retry...")
+            time.sleep(delay)
+            attempt += 1
+        except FileNotFoundError:
+            print(f"FileNotFoundError encountered while reading {filepath}. Waiting {delay} second(s) before retry...")
+            time.sleep(delay)
+            attempt += 1
+        except Exception as e:
+            # If any other exception occurs, you might want to break or handle differently
+            print(f"An unexpected error occurred while reading {filepath}: {e}")
+            # Could attempt retries, but if it's something else, you may want to break
+            break
+
+    # If all attempts fail, we exit
+    print(f"Failed to read {filepath} after {retries} attempts. exiting.")
+    sys.exit(1) 
 
 # Authenticate and create a service object
 def authenticate_gmail():
@@ -241,7 +273,7 @@ def get_last_timestamp_from_file(ticker):
     data_file = f"PriceData/{ticker}_data.csv"
     if not os.path.exists(data_file):
         return None
-    df = pd.read_csv(data_file)
+    df = pd.safe_read_csv(data_file)
     if df.empty:
         return None
     # Parse 'timestamp' column
@@ -266,7 +298,7 @@ def process_ticker_data(ticker, data):
     # Load existing data into a DataFrame without date_parser
     data_file = f"PriceData/{ticker}_data.csv"
     if os.path.exists(data_file):
-        df_existing = pd.read_csv(data_file)
+        df_existing = pd.safe_read_csv(data_file)
     else:
         df_existing = pd.DataFrame(columns=['timestamp', 'price', 'volume'])
 
@@ -349,6 +381,9 @@ def process_ticker_data(ticker, data):
     # Mark that data was added for this ticker
     data_added[ticker] = True
 
+
+
+
 def sync_missing_data():
     current_time = datetime.datetime.utcnow().replace(second=0, microsecond=0)
     for ticker in tickers:
@@ -374,10 +409,10 @@ def sync_missing_data():
                     'volume': volumes
                 })
 
-                # Load existing data without date_parser
+                # Load existing data without date_parser #TODO we we load the file it can be that the processer is working on it (we should add locks) -> quick fix is to retry to read the file if it's being cutted by processer.py
                 data_file = f"PriceData/{ticker}_data.csv"
                 if os.path.exists(data_file):
-                    df_existing = pd.read_csv(data_file)
+                    df_existing = safe_read_csv(data_file)
                 else:
                     df_existing = pd.DataFrame(columns=['timestamp', 'price', 'volume'])
 
