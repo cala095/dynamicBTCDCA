@@ -28,7 +28,7 @@ ENV_DATA_PREP = ('environment_data_prep', ['python', '-u', 'environment-data-pre
 ENV_PROD = ('environment_prod', ['python', '-u', 'environment-prod.py'], '../environment_gym/data')
 
 # Threshold in seconds
-MINIMUM_SECONDS_THRESHOLD = 2000
+MINIMUM_SECONDS_THRESHOLD = 1000
 
 def setup_logger(name, log_file):
     logger = logging.getLogger(name)
@@ -189,12 +189,14 @@ async def main():
             # If we don't have two lines or can't parse them, wait a bit and retry
             if len(lines) < 2:
                 main_logger.warning("Not enough log lines to parse. Will wait 10 seconds.")
+                print("Not enough log lines to parse. Will wait 10 seconds.")
                 await asyncio.sleep(10)
                 continue
 
             log_ts, seconds_until_next_hour = parse_log_lines(lines)
             if not log_ts or not seconds_until_next_hour:
                 main_logger.warning("Could not parse the log lines properly. Waiting 10 seconds.")
+                print("Could not parse the log lines properly. Waiting 10 seconds.")
                 await asyncio.sleep(10)
                 continue
 
