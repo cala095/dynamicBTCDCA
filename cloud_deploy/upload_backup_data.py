@@ -60,7 +60,7 @@ def upload_csv_files(local_directory, bucket_name, prefix=""):
 
 if __name__ == "__main__":
 
-    folder_path_env = '../fetching_data/history/LIVE PROCESSED'  # Replace with the actual folder path
+    folder_path_bkp = '../fetching_data/history/LIVE PROCESSED'  # Replace with the actual folder path
     csv_files = [f for f in os.listdir(folder_path_env) if is_valid_csv(f)]
 
     # Read the last recorded size from a file
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         last_size = 2793590019  # Default value if file not found
 
     # Get the current folder size
-    current_size = get_files_size(folder_path_env, csv_files)
+    current_size = get_files_size(folder_path_bkp, csv_files)
 
     # Compare the current size with the last recorded size
     if current_size >= last_size:
@@ -82,7 +82,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     # Write the current size to the file
-    with open('last_size.txt', 'w') as file:
+    with open('last_size_LIVE-PROCESSED.txt', 'w') as file:
         file.write(str(current_size))
 
     # usage:
